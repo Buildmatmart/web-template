@@ -109,6 +109,7 @@ export const ListingCard = props => {
     setActiveListing,
     showAuthorInfo = true,
     lazyLoadImage = true,
+    fromSearch,
   } = props;
 
   const translations = getListingCardTranslations(listing, config, intl);
@@ -169,7 +170,7 @@ export const ListingCard = props => {
             aspectRatioClassName={aspectRatioClassName}
             lazyLoadImage={lazyLoadImage}
           />
-          {!!searchFeaturedScore ? (
+          {!!searchFeaturedScore && fromSearch ? (
             <span className={css.featuredTag}>
               <FormattedMessage id="ListingCard.featuredOnSearch" />
             </span>
