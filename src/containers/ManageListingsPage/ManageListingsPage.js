@@ -44,7 +44,7 @@ import { setCurrentUser } from '../../ducks/user.duck';
 import { denormalisedResponseEntities } from '../../util/data';
 
 const SEARCH_FEATURED_LIMITS = {
-  pro: 2,
+  pro: 6,
   elite: 15,
   business: 30,
 };

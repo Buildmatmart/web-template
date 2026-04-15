@@ -5,7 +5,7 @@ import classNames from 'classnames';
 
 import { useConfiguration } from '../../context/configurationContext';
 
-import { useIntl } from '../../util/reactIntl';
+import { useIntl, FormattedMessage } from '../../util/reactIntl';
 import { requireListingImage } from '../../util/configHelpers';
 import { lazyLoadWithDimensions } from '../../util/uiHelpers';
 import { createSlug } from '../../util/urlHelpers';
@@ -125,10 +125,11 @@ export const ListingCard = props => {
   const classes = classNames(rootClassName || css.root, className);
 
   const id = listing?.id?.uuid;
-  const { title = '', publicData } = listing?.attributes || {};
+  const { title = '', publicData, metadata } = listing?.attributes || {};
   const slug = createSlug(title);
 
   const { listingType, cardStyle } = publicData || {};
+  const { searchFeaturedScore } = metadata || {};
   const validListingTypes = config.listing.listingTypes || [];
   const foundListingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
   // Render the listing image only if listing images are enabled in the listing type
@@ -156,17 +157,24 @@ export const ListingCard = props => {
       ariaLabel={cardAriaLabel}
     >
       {showListingImage ? (
-        <ListingCardImage
-          renderSizes={renderSizes}
-          title={titlePlain}
-          listing={listing}
-          setActivePropsMaybe={setActivePropsMaybe}
-          aspectWidth={aspectWidth}
-          aspectHeight={aspectHeight}
-          variantPrefix={variantPrefix}
-          aspectRatioClassName={aspectRatioClassName}
-          lazyLoadImage={lazyLoadImage}
-        />
+        <div className={css.imageWrapper}>
+          <ListingCardImage
+            renderSizes={renderSizes}
+            title={titlePlain}
+            listing={listing}
+            setActivePropsMaybe={setActivePropsMaybe}
+            aspectWidth={aspectWidth}
+            aspectHeight={aspectHeight}
+            variantPrefix={variantPrefix}
+            aspectRatioClassName={aspectRatioClassName}
+            lazyLoadImage={lazyLoadImage}
+          />
+          {!!searchFeaturedScore ? (
+            <span className={css.featuredTag}>
+              <FormattedMessage id="ListingCard.featuredOnSearch" />
+            </span>
+          ) : null}
+        </div>
       ) : (
         <ListingCardThumbnail
           style={cardStyle}

@@ -1445,5 +1445,6 @@
   "ManageListingCard.featureOnHomePage": "Feature on Home page",
   "ManageListingCard.removeFromHomePage": "Remove from Home page",
   "ManageListingCard.featuredOnSearch": "Featured on Search",
-  "ManageListingCard.featuredOnHome": "Featured on Home"
+  "ManageListingCard.featuredOnHome": "Featured on Home",
+  "ListingCard.featuredOnSearch": "Featured"
 }

@@ -247,7 +247,7 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
 
     // User-specified sort takes priority
     if (sortParam !== undefined && sortParam !== sortConfig.relevanceKey) {
-      return { sort: sortParam };
+      return { sort: `meta_searchFeaturedScore,${sortParam}` };
     }
 
     // No sort parameter needed when keyword search is used or sort config is inactive
@@ -256,7 +256,7 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
     }
 
     // Fall back to default sort
-    return { sort: defaultSort };
+    return { sort: `meta_searchFeaturedScore,${defaultSort}` };
   };
 
   const {
@@ -423,6 +423,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'price',
         'deleted',
         'state',
+        'metadata',
         'publicData.listingType',
         'publicData.transactionProcessAlias',
         'publicData.unitType',

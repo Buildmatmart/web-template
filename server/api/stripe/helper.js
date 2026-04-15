@@ -17,7 +17,7 @@ const updateAdditionalQuota = async (data, iSdk) => {
   try {
     const { metadata, client_reference_id, created, id } = data;
 
-    if (['search-featured', 'home-featured'].includes(metadata?.quotaType)) {
+    if (['search-featured', 'home-featured'].includes(metadata?.type)) {
       const userRes = await iSdk.users.show({
         id: client_reference_id,
       });
@@ -26,9 +26,9 @@ const updateAdditionalQuota = async (data, iSdk) => {
       const { searchFeaturedQuota = [], homeFeaturedQuota = [] } = user.attributes.profile.metadata;
 
       const quotaKey =
-        metadata.quotaType === 'search-featured' ? 'searchFeaturedQuota' : 'homeFeaturedQuota';
+        metadata.type === 'search-featured' ? 'searchFeaturedQuota' : 'homeFeaturedQuota';
       const currentQuota =
-        metadata.quotaType === 'search-featured' ? searchFeaturedQuota : homeFeaturedQuota;
+        metadata.type === 'search-featured' ? searchFeaturedQuota : homeFeaturedQuota;
 
       await iSdk.users.updateProfile({
         id: user.id,
@@ -37,7 +37,7 @@ const updateAdditionalQuota = async (data, iSdk) => {
         },
       });
     } else {
-      console.log('Unknown quota type for additional quota update', metadata?.quotaType);
+      console.log('Unknown quota type for additional quota update', metadata?.type);
     }
   } catch (error) {}
 };

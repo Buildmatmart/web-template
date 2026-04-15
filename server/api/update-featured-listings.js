@@ -3,7 +3,7 @@ const { getSdk, handleError, getIntegrationSdk, serialize } = require('../api-ut
 
 // Tier definitions — keep in sync with SubscriptionPage
 const FEATURED_LIMITS = {
-  search: { pro: 2, elite: 15, business: 30 },
+  search: { pro: 6, elite: 15, business: 30 },
   home:   { pro: 0, elite: 2,  business: 5  },
 };
 
@@ -11,10 +11,12 @@ const LOCATION_CONFIG = {
   search: {
     countKey: 'searchFeaturedCount',
     scoreKey: 'searchFeaturedScore',
+    featuredKey: 'isSearchFeatured',
   },
   home: {
     countKey: 'homeFeaturedCount',
     scoreKey: 'homeFeaturedScore',
+    featuredKey: 'isHomeFeatured',
   },
 };
 
@@ -52,7 +54,7 @@ module.exports = async (req, res) => {
     const { subscriptionPlan, ...userMeta } =
       currentUser?.attributes?.profile?.metadata || {};
 
-    const { countKey, scoreKey } = config;
+    const { countKey, scoreKey, featuredKey } = config;
     const currentCount = userMeta[countKey] ?? 0;
     const limit = FEATURED_LIMITS[location][subscriptionPlan] || 0;
 
@@ -75,7 +77,10 @@ module.exports = async (req, res) => {
     const newScore = active ? 1 : 0;
 
     const [lisRes, updatedUserRes] = await Promise.all([
-      iSdk.listings.update({ id: listingId, metadata: { [scoreKey]: newScore } }, { expand: true }),
+      iSdk.listings.update(
+        { id: listingId, metadata: { [scoreKey]: newScore, [featuredKey]: active } },
+        { expand: true }
+      ),
       iSdk.users.updateProfile(
         { id: currentUser.id, metadata: { [countKey]: newCount } },
         { expand: true }
