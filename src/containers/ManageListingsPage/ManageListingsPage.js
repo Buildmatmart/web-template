@@ -21,6 +21,7 @@ import {
   LayoutSingleColumn,
   NamedLink,
   Modal,
+  PrimaryButtonInline,
 } from '../../components';
 
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
@@ -37,7 +38,7 @@ import {
 } from './ManageListingsPage.duck';
 import css from './ManageListingsPage.module.css';
 import DiscardDraftModal from './DiscardDraftModal/DiscardDraftModal';
-import { updateFeaturedListings } from '../../util/api';
+import { updateFeaturedListings, createCheckoutSession } from '../../util/api';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 import { setCurrentUser } from '../../ducks/user.duck';
 import { denormalisedResponseEntities } from '../../util/data';
@@ -124,6 +125,7 @@ export const ManageListingsPageComponent = props => {
   const [discardDraftModalOpen, setDiscardDraftModalOpen] = useState(null);
   const [discardDraftModalId, setDiscardDraftModalId] = useState(null);
   const [featuredListingId, setFeaturedListingId] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
   const history = useHistory();
   const routeConfiguration = useRouteConfiguration();
   const config = useConfiguration();
@@ -187,6 +189,44 @@ export const ManageListingsPageComponent = props => {
     setDiscardDraftModalId(null);
   };
 
+  const handleBuyQuota = async type => {
+    try {
+      setCheckoutLoading(type);
+      const { url } = await createCheckoutSession({ type });
+      if (url) window.location.href = url;
+    } catch (e) {
+      console.error('Checkout session error', e);
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleFeatureListing = async (listingId, status, location) => {
+    try {
+      setFeaturedListingId(listingId);
+      const res = await updateFeaturedListings({
+        listingId: listingId.uuid,
+        active: status,
+        location: location,
+      });
+      const { user, listing } = res.data;
+
+      if (!!user) {
+        user.data.data.type = 'currentUser';
+        dispatch(setCurrentUser(denormalisedResponseEntities(user)[0]));
+      }
+
+      if (!!listing) {
+        listing.data.data.type = 'ownListing';
+        dispatch(updateOwnListing(listing.data.data));
+      }
+    } catch (error) {
+      window.alert(error?.statusText || 'Error updating featured');
+    } finally {
+      setFeaturedListingId(null);
+    }
+  };
+
   const hasPaginationInfo = !!pagination && pagination.totalItems != null;
   const listingsAreLoaded = !queryInProgress && hasPaginationInfo;
 
@@ -220,38 +260,25 @@ export const ManageListingsPageComponent = props => {
 
   const showManageListingsLink = showCreateListingLinkForUser(config, currentUser);
 
-  const { subscriptionPlan, searchFeaturedCount = 0, homeFeaturedCount = 0 } =
-    currentUser?.attributes?.profile?.metadata || {};
+  const {
+    subscriptionPlan,
+    searchFeaturedCount = 0,
+    homeFeaturedCount = 0,
+    searchFeaturedQuota = [],
+    homeFeaturedQuota = [],
+  } = currentUser?.attributes?.profile?.metadata || {};
+
+  const activeSeachFeaturedQuota = searchFeaturedQuota.filter(q => q.status === 'active').length;
+  const activeHomeFeaturedQuota = homeFeaturedQuota.filter(q => q.status === 'active').length;
+
+  const totalSearchFeaturedQuota =
+    (SEARCH_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeSeachFeaturedQuota;
+  const totalHomeFeaturedQuota =
+    (HOME_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeHomeFeaturedQuota;
 
   const showSearchFeatured = !!SEARCH_FEATURED_LIMITS[subscriptionPlan];
 
   const showHomeFeatured = !!HOME_FEATURED_LIMITS[subscriptionPlan];
-
-  const handleFeatureListing = async (listingId, status, location) => {
-    try {
-      setFeaturedListingId(listingId);
-      const res = await updateFeaturedListings({
-        listingId: listingId.uuid,
-        active: status,
-        location: location,
-      });
-      const { user, listing } = res.data;
-
-      if (!!user) {
-        user.data.data.type = 'currentUser';
-        dispatch(setCurrentUser(denormalisedResponseEntities(user)[0]));
-      }
-
-      if (!!listing) {
-        listing.data.data.type = 'ownListing';
-        dispatch(updateOwnListing(listing.data.data));
-      }
-    } catch (error) {
-      window.alert(error?.statusText || 'Error updating featured');
-    } finally {
-      setFeaturedListingId(null);
-    }
-  };
 
   return (
     <Page
@@ -276,30 +303,50 @@ export const ManageListingsPageComponent = props => {
         <div className={css.listingPanel}>
           <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
 
-          {subscriptionPlan ? (
+          {!!listings?.length && (
             <div className={css.quotaInfo}>
-              <p className={css.quotaItem}>
-                <FormattedMessage
-                  id="ManageListingsPage.searchFeaturedQuota"
-                  values={{
-                    b: chunks => <strong>{chunks}</strong>,
-                    used: searchFeaturedCount,
-                    total: SEARCH_FEATURED_LIMITS[subscriptionPlan],
-                  }}
-                />
-              </p>
-              <p className={css.quotaItem}>
-                <FormattedMessage
-                  id="ManageListingsPage.homeFeaturedQuota"
-                  values={{
-                    b: chunks => <strong>{chunks}</strong>,
-                    used: homeFeaturedCount,
-                    total: HOME_FEATURED_LIMITS[subscriptionPlan],
-                  }}
-                />
-              </p>
+              <div className={css.quotaRow}>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.searchFeaturedQuota"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      used: searchFeaturedCount,
+                      total: totalSearchFeaturedQuota,
+                    }}
+                  />
+                </p>
+                <PrimaryButtonInline
+                  inProgress={checkoutLoading === 'search-featured'}
+                  disabled={checkoutLoading !== null}
+                  onClick={() => handleBuyQuota('search-featured')}
+                >
+                  <FormattedMessage id="ManageListingsPage.buySearchQuota" />
+                </PrimaryButtonInline>
+              </div>
+              <div className={css.quotaRow}>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.homeFeaturedQuota"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      used: homeFeaturedCount,
+                      total: totalHomeFeaturedQuota,
+                    }}
+                  />
+                </p>
+                <PrimaryButtonInline
+                  inProgress={checkoutLoading === 'home-featured'}
+                  disabled={checkoutLoading !== null}
+                  onClick={() => handleBuyQuota('home-featured')}
+                >
+                  <FormattedMessage id="ManageListingsPage.buyHomeQuota" />
+                </PrimaryButtonInline>
+              </div>
             </div>
-          ) : null}
+          )}
+
+          {/* here */}
 
           <ul className={css.listingCards}>
             {listings.map(l => (

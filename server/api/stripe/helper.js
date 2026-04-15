@@ -13,6 +13,35 @@ const planLinkMap = {
   [STRIPE_BUSINESS_PAYMENT_LINK_ID]: 'business',
 };
 
+const updateAdditionalQuota = async (data, iSdk) => {
+  try {
+    const { metadata, client_reference_id, created, id } = data;
+
+    if (['search-featured', 'home-featured'].includes(metadata?.quotaType)) {
+      const userRes = await iSdk.users.show({
+        id: client_reference_id,
+      });
+
+      const user = denormalisedResponseEntities(userRes)[0];
+      const { searchFeaturedQuota = [], homeFeaturedQuota = [] } = user.attributes.profile.metadata;
+
+      const quotaKey =
+        metadata.quotaType === 'search-featured' ? 'searchFeaturedQuota' : 'homeFeaturedQuota';
+      const currentQuota =
+        metadata.quotaType === 'search-featured' ? searchFeaturedQuota : homeFeaturedQuota;
+
+      await iSdk.users.updateProfile({
+        id: user.id,
+        metadata: {
+          [quotaKey]: [...currentQuota, { id, created, status: 'active' }],
+        },
+      });
+    } else {
+      console.log('Unknown quota type for additional quota update', metadata?.quotaType);
+    }
+  } catch (error) {}
+};
+
 const updateUserProfile = async (data, eventType) => {
   try {
     const iSdk = getIntegrationSdk();
@@ -27,7 +56,7 @@ const updateUserProfile = async (data, eventType) => {
       }
 
       if (mode !== 'subscription') {
-        console.log('Checkout session completed, but mode is not subscription:', mode);
+        updateAdditionalQuota(data, iSdk);
         return;
       }
 

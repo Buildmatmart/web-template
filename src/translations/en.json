@@ -1438,6 +1438,8 @@
   "SectionPlans.manageSubscriptionLoading": "Loading...",
   "ManageListingsPage.searchFeaturedQuota": "<b>Search Featured Listings Quota:</b> {used}/{total}",
   "ManageListingsPage.homeFeaturedQuota": "<b>Homepage Featured Listings Quota:</b> {used}/{total}",
+  "ManageListingsPage.buySearchQuota": "Buy Search quota",
+  "ManageListingsPage.buyHomeQuota": "Buy Home quota",
   "ManageListingCard.featureOnSearchPage": "Feature on Search page",
   "ManageListingCard.removeFromSearchPage": "Remove from Search page",
   "ManageListingCard.featureOnHomePage": "Feature on Home page",

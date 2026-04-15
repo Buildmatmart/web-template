@@ -88,6 +88,36 @@
   }
 }
 
+.quotaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.buyQuotaButton {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border: 1px solid var(--marketplaceColor);
+  border-radius: var(--borderRadiusMedium);
+  background-color: transparent;
+  color: var(--marketplaceColor);
+  font-size: 13px;
+  font-weight: var(--fontWeightMedium);
+  cursor: pointer;
+  transition: var(--transitionStyleButton);
+
+  &:hover {
+    background-color: var(--marketplaceColor);
+    color: var(--colorWhite);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 .quotaItem {
   margin: 0;
   font-size: 14px;

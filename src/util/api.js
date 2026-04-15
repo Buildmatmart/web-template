@@ -170,3 +170,7 @@ export const createBillingPortalSession = () => {
 export const updateFeaturedListings = body => {
   return post('/api/update-featured-listings', body);
 };
+
+export const createCheckoutSession = body => {
+  return post('/api/stripe/create-checkout-session', body);
+};
