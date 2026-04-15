@@ -8,6 +8,7 @@ import SectionColumns from './SectionColumns';
 import SectionFeatures from './SectionFeatures';
 import SectionHero from './SectionHero';
 import SectionListings from './SectionListings';
+import SectionPlans from './SectionPlans/SectionPlans';
 
 // Styles
 // Note: these contain
@@ -133,6 +134,20 @@ const SectionBuilder = props => {
           section?.appearance?.textColor === 'white';
         const classes = classNames({ [css.darkTheme]: isDarkTheme });
         const sectionId = section.sectionId;
+
+        if (sectionId === 'plans') {
+          return (
+            <SectionPlans
+              key={`${sectionId}_i${index}`}
+              className={classes}
+              defaultClasses={DEFAULT_CLASSES}
+              isInsideContainer={isInsideContainer}
+              options={{ ...otherOption, defaultClasses: DEFAULT_CLASSES }}
+              {...section}
+              sectionId={sectionId}
+            />
+          );
+        }
 
         if (Section) {
           return (

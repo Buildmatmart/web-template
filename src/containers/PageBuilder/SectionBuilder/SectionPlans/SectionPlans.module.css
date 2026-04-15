@@ -1,0 +1,138 @@
+@import '../../../../styles/customMediaQueries.css';
+
+.plansGrid {
+  max-width: var(--contentMaxWidthPages);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  margin: 0 auto;
+  padding: 48px 24px;
+
+  @media (--viewportMedium) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    padding: 64px 32px;
+  }
+}
+
+.noSidePaddings {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Plan card */
+.planCard {
+  height: 100%;
+  background-color: var(--colorWhite);
+  border-radius: 8px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--colorGrey100);
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+}
+
+.planCardActive {
+  border-color: var(--marketplaceColor);
+  box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.15);
+}
+
+/* Active badge on the top border */
+.activeBadge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--marketplaceColor);
+  color: var(--colorWhite);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Plan name (h2/h3 from block title) */
+.planName {
+  & h1,
+  & h2,
+  & h3,
+  & h4 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--colorGrey700);
+    margin: 0 0 16px 0;
+    text-align: center;
+  }
+}
+
+/* Plan details (markdown: best for, cost, inclusions list) */
+.planContent {
+  flex: 1;
+}
+
+.planDetails {
+  & p,
+  & li {
+    font-size: 14px;
+    color: var(--colorGrey600);
+    line-height: 1.6;
+  }
+
+  & p {
+    margin: 0 0 8px 0;
+  }
+
+  & strong {
+    color: var(--colorGrey700);
+    font-weight: 600;
+  }
+
+  & ul {
+    padding-left: 20px;
+    margin: 12px 0 24px 0;
+  }
+
+  & li {
+    margin-bottom: 6px;
+  }
+
+  & hr {
+    border: none;
+    border-top: 1px solid var(--colorGrey100);
+    margin: 12px 0;
+  }
+}
+
+/* CTA wrapper — sits after the flex:1 planContent, always at the bottom */
+.planCtaWrapper {
+  padding-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+/* CTA button override */
+.planCta {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  background-color: var(--marketplaceColor);
+  border-radius: 4px;
+  color: var(--colorWhite);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color ease-in-out 100ms;
+
+  &:hover {
+    text-decoration: none;
+    background-color: var(--marketplaceColorDark);
+  }
+}
