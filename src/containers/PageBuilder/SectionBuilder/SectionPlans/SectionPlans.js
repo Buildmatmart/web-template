@@ -54,7 +54,7 @@ const buildStripeLink = (baseLink, userEmail, userId) => {
  */
 const SectionPlans = props => {
   const intl = useIntl();
-  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalLoadingId, setPortalLoadingId] = useState(null);
   const { currentUser } = useSelector(state => state.user);
   const isAuthenticated = !!currentUser;
   const {
@@ -91,8 +91,8 @@ const SectionPlans = props => {
     business: businessLink,
   };
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
+  const handleManageSubscription = async id => {
+    setPortalLoadingId(id);
     try {
       const data = await createBillingPortalSession();
       if (data.url) {
@@ -101,7 +101,7 @@ const SectionPlans = props => {
     } catch (e) {
       console.error('Failed to open billing portal', e);
     } finally {
-      setPortalLoading(false);
+      setPortalLoadingId(null);
     }
   };
 
@@ -134,6 +134,7 @@ const SectionPlans = props => {
             const isActivePlan = subscriptionPlan === blockId;
             const stripeLink = stripeLinkByBlockId[blockId];
             const ctaLabel = blockCta?.content;
+            const isLoading = portalLoadingId === blockId;
 
             return (
               <div
@@ -162,12 +163,22 @@ const SectionPlans = props => {
                     {isActivePlan ? (
                       <button
                         className={css.planCta}
-                        onClick={handleManageSubscription}
-                        disabled={portalLoading}
+                        onClick={() => handleManageSubscription(blockId)}
+                        disabled={isLoading}
                       >
-                        {portalLoading
+                        {isLoading
                           ? intl.formatMessage({ id: 'SectionPlans.manageSubscriptionLoading' })
                           : intl.formatMessage({ id: 'SectionPlans.manageSubscription' })}
+                      </button>
+                    ) : isAuthenticated && subscriptionPlan ? (
+                      <button
+                        className={css.planCta}
+                        onClick={() => handleManageSubscription(blockId)}
+                        disabled={isLoading}
+                      >
+                        {isLoading
+                          ? intl.formatMessage({ id: 'SectionPlans.manageSubscriptionLoading' })
+                          : ctaLabel}
                       </button>
                     ) : isAuthenticated ? (
                       <button
