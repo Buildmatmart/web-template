@@ -268,17 +268,20 @@ export const ManageListingsPageComponent = props => {
     homeFeaturedQuota = [],
   } = currentUser?.attributes?.profile?.metadata || {};
 
-  const activeSeachFeaturedQuota = searchFeaturedQuota.filter(q => q.status === 'active').length;
-  const activeHomeFeaturedQuota = homeFeaturedQuota.filter(q => q.status === 'active').length;
+  const activeSeachFeaturedQuota = searchFeaturedQuota.filter(q => ['active'].includes(q.status))
+    .length;
+  const activeHomeFeaturedQuota = homeFeaturedQuota.filter(q => ['active'].includes(q.status))
+    .length;
 
   const totalSearchFeaturedQuota =
     (SEARCH_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeSeachFeaturedQuota;
   const totalHomeFeaturedQuota =
     (HOME_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeHomeFeaturedQuota;
 
-  const showSearchFeatured = !!SEARCH_FEATURED_LIMITS[subscriptionPlan];
+  const showSearchFeatured =
+    !!SEARCH_FEATURED_LIMITS[subscriptionPlan] || totalSearchFeaturedQuota > 0;
 
-  const showHomeFeatured = !!HOME_FEATURED_LIMITS[subscriptionPlan];
+  const showHomeFeatured = !!HOME_FEATURED_LIMITS[subscriptionPlan] || totalHomeFeaturedQuota > 0;
 
   return (
     <Page

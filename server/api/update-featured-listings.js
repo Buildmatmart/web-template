@@ -12,11 +12,13 @@ const LOCATION_CONFIG = {
     countKey: 'searchFeaturedCount',
     scoreKey: 'searchFeaturedScore',
     featuredKey: 'isSearchFeatured',
+    quotaKey: 'searchFeaturedQuota',
   },
   home: {
     countKey: 'homeFeaturedCount',
     scoreKey: 'homeFeaturedScore',
     featuredKey: 'isHomeFeatured',
+    quotaKey: 'homeFeaturedQuota',
   },
 };
 
@@ -54,15 +56,20 @@ module.exports = async (req, res) => {
     const { subscriptionPlan, ...userMeta } =
       currentUser?.attributes?.profile?.metadata || {};
 
-    const { countKey, scoreKey, featuredKey } = config;
+    const { countKey, scoreKey, featuredKey, quotaKey } = config;
     const currentCount = userMeta[countKey] ?? 0;
-    const limit = FEATURED_LIMITS[location][subscriptionPlan] || 0;
+    const planLimit = FEATURED_LIMITS[location][subscriptionPlan] || 0;
+    const purchasedQuota = userMeta[quotaKey] || [];
+    const activePurchasedQuota = purchasedQuota.filter(q => q.status === 'active');
+    const totalLimit = planLimit + activePurchasedQuota.length;
 
-    if (active && currentCount >= limit) {
+    if (active && currentCount >= totalLimit) {
       throw makeError(`${location} featured listings limit reached`, 403, {
         subscriptionPlan,
         currentCount,
-        limit,
+        planLimit,
+        purchasedQuota: activePurchasedQuota.length,
+        totalLimit,
       });
     }
 
