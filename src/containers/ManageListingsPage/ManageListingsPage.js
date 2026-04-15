@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { compose } from 'redux';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 import { useConfiguration } from '../../context/configurationContext';
@@ -33,9 +33,26 @@ import {
   openListing,
   getOwnListingsById,
   discardDraft,
+  updateOwnListing,
 } from './ManageListingsPage.duck';
 import css from './ManageListingsPage.module.css';
 import DiscardDraftModal from './DiscardDraftModal/DiscardDraftModal';
+import { updateFeaturedListings } from '../../util/api';
+import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
+import { setCurrentUser } from '../../ducks/user.duck';
+import { denormalisedResponseEntities } from '../../util/data';
+
+const SEARCH_FEATURED_LIMITS = {
+  pro: 2,
+  elite: 15,
+  business: 30,
+};
+
+const HOME_FEATURED_LIMITS = {
+  pro: 0,
+  elite: 2,
+  business: 5,
+};
 
 const Heading = props => {
   const { listingsAreLoaded, pagination } = props;
@@ -106,10 +123,12 @@ export const ManageListingsPageComponent = props => {
   const [listingMenuOpen, setListingMenuOpen] = useState(null);
   const [discardDraftModalOpen, setDiscardDraftModalOpen] = useState(null);
   const [discardDraftModalId, setDiscardDraftModalId] = useState(null);
+  const [featuredListingId, setFeaturedListingId] = useState(null);
   const history = useHistory();
   const routeConfiguration = useRouteConfiguration();
   const config = useConfiguration();
   const intl = useIntl();
+  const dispatch = useDispatch();
 
   const {
     currentUser,
@@ -201,6 +220,39 @@ export const ManageListingsPageComponent = props => {
 
   const showManageListingsLink = showCreateListingLinkForUser(config, currentUser);
 
+  const { subscriptionPlan, searchFeaturedCount = 0, homeFeaturedCount = 0 } =
+    currentUser?.attributes?.profile?.metadata || {};
+
+  const showSearchFeatured = !!SEARCH_FEATURED_LIMITS[subscriptionPlan];
+
+  const showHomeFeatured = !!HOME_FEATURED_LIMITS[subscriptionPlan];
+
+  const handleFeatureListing = async (listingId, status, location) => {
+    try {
+      setFeaturedListingId(listingId);
+      const res = await updateFeaturedListings({
+        listingId: listingId.uuid,
+        active: status,
+        location: location,
+      });
+      const { user, listing } = res.data;
+
+      if (!!user) {
+        user.data.data.type = 'currentUser';
+        dispatch(setCurrentUser(denormalisedResponseEntities(user)[0]));
+      }
+
+      if (!!listing) {
+        listing.data.data.type = 'ownListing';
+        dispatch(updateOwnListing(listing.data.data));
+      }
+    } catch (error) {
+      window.alert(error?.statusText || 'Error updating featured');
+    } finally {
+      setFeaturedListingId(null);
+    }
+  };
+
   return (
     <Page
       title={intl.formatMessage({ id: 'ManageListingsPage.title' })}
@@ -224,13 +276,40 @@ export const ManageListingsPageComponent = props => {
         <div className={css.listingPanel}>
           <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
 
+          {subscriptionPlan ? (
+            <div className={css.quotaInfo}>
+              <p className={css.quotaItem}>
+                <FormattedMessage
+                  id="ManageListingsPage.searchFeaturedQuota"
+                  values={{
+                    b: chunks => <strong>{chunks}</strong>,
+                    used: searchFeaturedCount,
+                    total: SEARCH_FEATURED_LIMITS[subscriptionPlan],
+                  }}
+                />
+              </p>
+              <p className={css.quotaItem}>
+                <FormattedMessage
+                  id="ManageListingsPage.homeFeaturedQuota"
+                  values={{
+                    b: chunks => <strong>{chunks}</strong>,
+                    used: homeFeaturedCount,
+                    total: HOME_FEATURED_LIMITS[subscriptionPlan],
+                  }}
+                />
+              </p>
+            </div>
+          ) : null}
+
           <ul className={css.listingCards}>
             {listings.map(l => (
               <li key={l.id.uuid} className={css.listingCard}>
                 <ManageListingCard
                   listing={l}
                   isMenuOpen={!!listingMenuOpen && listingMenuOpen.id.uuid === l.id.uuid}
-                  actionsInProgressListingId={openingListing || closingListing || discardingDraft}
+                  actionsInProgressListingId={
+                    openingListing || closingListing || discardingDraft || featuredListingId
+                  }
                   onToggleMenu={onToggleMenu}
                   onCloseListing={onCloseListing}
                   onOpenListing={handleOpenListing}
@@ -239,6 +318,10 @@ export const ManageListingsPageComponent = props => {
                   hasClosingError={closingErrorListingId.uuid === l.id.uuid}
                   hasDiscardingError={discardingErrorListingId.uuid === l.id.uuid}
                   renderSizes={renderSizes}
+                  showSearchFeatured={showSearchFeatured}
+                  showHomeFeatured={showHomeFeatured}
+                  onFeatureListing={handleFeatureListing}
+                  onUnfeatureListing={handleFeatureListing}
                 />
               </li>
             ))}
@@ -283,6 +366,7 @@ const mapStateToProps = state => {
     discardingDraftError,
   } = state.ManageListingsPage;
   const listings = getOwnListingsById(state, currentPageResultIds);
+
   return {
     currentUser,
     currentPageResultIds,

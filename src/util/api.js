@@ -166,3 +166,7 @@ export const deleteUserAccount = body => {
 export const createBillingPortalSession = () => {
   return get('/api/stripe/create-billing-portal-session');
 };
+
+export const updateFeaturedListings = body => {
+  return post('/api/update-featured-listings', body);
+};

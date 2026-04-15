@@ -33,18 +33,29 @@ const isOutOfStock = listing => {
  * @param {Object} listing - Listing entity (ownListing)
  * @returns {string[]} relevant menu item keys
  */
-const getMenuItems = listing => {
+const getMenuItems = (listing, showSearchFeatured, showHomeFeatured) => {
   const state = listing?.attributes?.state;
   const isClosed = state === LISTING_STATE_CLOSED;
   const isDraft = state === LISTING_STATE_DRAFT;
   const isPendingApproval = state === LISTING_STATE_PENDING_APPROVAL;
+  const { searchFeaturedScore, homeFeaturedScore } = listing?.attributes?.metadata || {};
 
-  // Currently, we only show "close listing" for active listings
   if (!listing || isDraft || isClosed || isPendingApproval || isOutOfStock(listing)) {
     return [];
   }
 
-  return ['close-listing'];
+  const items = [];
+
+  if (showSearchFeatured) {
+    items.push(searchFeaturedScore ? 'remove-from-search' : 'feature-on-search');
+  }
+
+  if (showHomeFeatured) {
+    items.push(homeFeaturedScore ? 'remove-from-home' : 'feature-on-home');
+  }
+
+  items.push('close-listing');
+  return items;
 };
 
 /**
@@ -57,18 +68,34 @@ const getMenuItems = listing => {
  * @param {Object} [props.inProgressListingId] - The actions in progress for the listing
  * @param {function} props.onToggleMenu - The function to toggle the menu
  * @param {function} props.onCloseListing - The function to close the listing
+ * @param {function} props.onFeatureListing - The function to feature the listing on the search page
+ * @param {function} props.onUnfeatureListing - The function to remove the listing from the search page
+ * @param {boolean} [props.showSearchFeatured] - Whether the search featured option is available
  * @returns {JSX.Element|null}
  */
 const CardMenu = props => {
-  const { isMenuOpen, listing, inProgressListingId, onToggleMenu, onCloseListing } = props;
+  const {
+    isMenuOpen,
+    listing,
+    inProgressListingId,
+    onToggleMenu,
+    onCloseListing,
+    onFeatureListing,
+    onUnfeatureListing,
+    showSearchFeatured,
+    showHomeFeatured,
+  } = props;
   const intl = useIntl();
-  const menuItems = getMenuItems(listing);
+  const menuItems = getMenuItems(listing, showSearchFeatured, showHomeFeatured);
 
   if (menuItems.length === 0) {
     return null;
   }
 
   const menuItemClasses = classNames(css.menuItem, {
+    [css.menuItemDisabled]: !!inProgressListingId,
+  });
+  const menuItemActionClasses = classNames(css.menuItem, css.menuItemAction, {
     [css.menuItemDisabled]: !!inProgressListingId,
   });
 
@@ -103,6 +130,68 @@ const CardMenu = props => {
           </MenuLabel>
           <MenuContent rootClassName={css.menuContent}>
             {menuItems.map(itemKey => {
+              if (itemKey === 'remove-from-search' || itemKey === 'feature-on-search') {
+                return (
+                  <MenuItem key={itemKey}>
+                    <InlineTextButton
+                      rootClassName={
+                        itemKey === 'remove-from-search' ? menuItemClasses : menuItemActionClasses
+                      }
+                      onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (!inProgressListingId) {
+                          onToggleMenu(null);
+
+                          if (itemKey === 'remove-from-search') {
+                            onUnfeatureListing(listing.id, false, 'search');
+                          } else {
+                            onFeatureListing(listing.id, true, 'search');
+                          }
+                        }
+                      }}
+                    >
+                      {itemKey === 'remove-from-search' ? (
+                        <FormattedMessage id="ManageListingCard.removeFromSearchPage" />
+                      ) : (
+                        <FormattedMessage id="ManageListingCard.featureOnSearchPage" />
+                      )}
+                    </InlineTextButton>
+                  </MenuItem>
+                );
+              }
+
+              if (itemKey === 'remove-from-home' || itemKey === 'feature-on-home') {
+                return (
+                  <MenuItem key={itemKey}>
+                    <InlineTextButton
+                      rootClassName={
+                        itemKey === 'remove-from-home' ? menuItemClasses : menuItemActionClasses
+                      }
+                      onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        if (!inProgressListingId) {
+                          onToggleMenu(null);
+
+                          if (itemKey === 'remove-from-home') {
+                            onUnfeatureListing(listing.id, false, 'home');
+                          } else {
+                            onFeatureListing(listing.id, true, 'home');
+                          }
+                        }
+                      }}
+                    >
+                      {itemKey === 'remove-from-home' ? (
+                        <FormattedMessage id="ManageListingCard.removeFromHomePage" />
+                      ) : (
+                        <FormattedMessage id="ManageListingCard.featureOnHomePage" />
+                      )}
+                    </InlineTextButton>
+                  </MenuItem>
+                );
+              }
+
               if (itemKey === 'close-listing') {
                 return (
                   <MenuItem key={itemKey}>

@@ -110,3 +110,9 @@
     color: var(--colorGrey100);
   }
 }
+
+.menuItemAction {
+  &:hover {
+    background-color: var(--marketplaceColor);
+  }
+}

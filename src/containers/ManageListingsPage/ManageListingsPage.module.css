@@ -77,6 +77,27 @@
   }
 }
 
+.quotaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 24px 24px 24px;
+
+  @media (--viewportLarge) {
+    margin: 0 36px 24px 36px;
+  }
+}
+
+.quotaItem {
+  margin: 0;
+  font-size: 14px;
+  color: var(--colorGrey600);
+
+  & strong {
+    color: var(--colorGrey700);
+  }
+}
+
 .createListingParagraph,
 .headingNoListings {
   margin: 0 0 12px 0;

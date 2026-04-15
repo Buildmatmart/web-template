@@ -180,6 +180,10 @@ const manageListingsPageSlice = createSlice({
       const apiResponse = action.payload.data;
       state.ownEntities = updatedEntities({ ...state.ownEntities }, apiResponse);
     },
+    updateOwnListing: (state, action) => {
+      const updatedState = updateListingAttributes(state, action.payload);
+      state.ownEntities = updatedState.ownEntities;
+    },
   },
   extraReducers: builder => {
     // Query own listings
@@ -265,7 +269,11 @@ const manageListingsPageSlice = createSlice({
   },
 });
 
-export const { clearOpenListingError, addOwnEntities } = manageListingsPageSlice.actions;
+export const {
+  clearOpenListingError,
+  addOwnEntities,
+  updateOwnListing,
+} = manageListingsPageSlice.actions;
 export default manageListingsPageSlice.reducer;
 
 // ================ Load data ================ //

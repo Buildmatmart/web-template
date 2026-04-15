@@ -1433,8 +1433,15 @@
   "UserNav.profileSettings": "Profile settings",
   "UserNav.screenreader.userNav": "User profile navigation",
   "UserNav.yourListings": "Your listings",
-
   "SectionPlans.activePlan": "Current Plan",
   "SectionPlans.manageSubscription": "Manage Subscription",
-  "SectionPlans.manageSubscriptionLoading": "Loading..."
+  "SectionPlans.manageSubscriptionLoading": "Loading...",
+  "ManageListingsPage.searchFeaturedQuota": "<b>Search Featured Listings Quota:</b> {used}/{total}",
+  "ManageListingsPage.homeFeaturedQuota": "<b>Homepage Featured Listings Quota:</b> {used}/{total}",
+  "ManageListingCard.featureOnSearchPage": "Feature on Search page",
+  "ManageListingCard.removeFromSearchPage": "Remove from Search page",
+  "ManageListingCard.featureOnHomePage": "Feature on Home page",
+  "ManageListingCard.removeFromHomePage": "Remove from Home page",
+  "ManageListingCard.featuredOnSearch": "Featured on Search",
+  "ManageListingCard.featuredOnHome": "Featured on Home"
 }

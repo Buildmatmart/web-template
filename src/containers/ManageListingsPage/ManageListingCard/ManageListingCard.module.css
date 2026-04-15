@@ -25,6 +25,28 @@
   }
 }
 
+.featuredTags {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+}
+
+.featuredTag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: var(--marketplaceColor);
+  color: var(--colorWhite);
+  font-size: 11px;
+  font-weight: var(--fontWeightSemiBold);
+  line-height: 16px;
+  white-space: nowrap;
+}
+
 .clickWrapperClickable {
   cursor: pointer;
 }

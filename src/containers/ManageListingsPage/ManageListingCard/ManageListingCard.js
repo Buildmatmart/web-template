@@ -167,6 +167,8 @@ const LinkToStockOrAvailabilityTab = props => {
  * @param {propTypes.ownListing} props.listing - The listing
  * @param {string} [props.renderSizes] - The render sizes for the ResponsiveImage component
  * @param {function} props.onCloseListing - The function to close the listing
+ * @param {function} props.onFeatureListing - The function to feature the listing on the search page
+ * @param {function} props.onUnfeatureListing - The function to remove the listing from the search page
  * @param {function} props.onOpenListing - The function to open the listing
  * @param {function} props.onDiscardDraft - The function to discard the draft
  * @param {function} props.onToggleMenu - The function to toggle the menu
@@ -186,18 +188,23 @@ export const ManageListingCard = props => {
     listing,
     renderSizes,
     onCloseListing,
+    onFeatureListing,
+    onUnfeatureListing,
     onOpenListing,
     onDiscardDraft,
     onToggleMenu,
+    showSearchFeatured,
+    showHomeFeatured,
   } = props;
   const classes = classNames(rootClassName || css.root, className);
   const currentListing = ensureOwnListing(listing);
   const id = currentListing.id.uuid;
-  const { title = '', state, publicData, price } = currentListing.attributes;
+  const { title = '', state, publicData, price, metadata } = currentListing.attributes;
   const slug = createSlug(title);
   const isDraft = state === LISTING_STATE_DRAFT;
 
   const { listingType, transactionProcessAlias } = publicData || {};
+  const { searchFeaturedScore, homeFeaturedScore } = metadata || {};
 
   const validListingTypes = config.listing.listingTypes;
   const listingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
@@ -229,7 +236,26 @@ export const ManageListingCard = props => {
           inProgressListingId={actionsInProgressListingId}
           onToggleMenu={onToggleMenu}
           onCloseListing={onCloseListing}
+          onFeatureListing={onFeatureListing}
+          onUnfeatureListing={onUnfeatureListing}
+          showSearchFeatured={showSearchFeatured}
+          showHomeFeatured={showHomeFeatured}
         />
+
+        {(searchFeaturedScore || homeFeaturedScore) ? (
+          <div className={css.featuredTags}>
+            {searchFeaturedScore ? (
+              <span className={css.featuredTag}>
+                <FormattedMessage id="ManageListingCard.featuredOnSearch" />
+              </span>
+            ) : null}
+            {homeFeaturedScore ? (
+              <span className={css.featuredTag}>
+                <FormattedMessage id="ManageListingCard.featuredOnHome" />
+              </span>
+            ) : null}
+          </div>
+        ) : null}
 
         {thisListingInProgress ? (
           <Overlay>
