@@ -128,6 +128,37 @@
   }
 }
 
+.headingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}
+
+.upgradeMessage {
+  margin: 0 24px 0 24px;
+  font-size: 13px;
+  color: var(--colorGrey600);
+  text-align: left;
+
+  @media (--viewportMedium) {
+    text-align: right;
+    margin: 0 24px 0 0;
+    max-width: 260px;
+    flex-shrink: 0;
+  }
+
+  @media (--viewportLarge) {
+    margin: 0 36px 0 0;
+  }
+}
+
 .createListingParagraph,
 .headingNoListings {
   margin: 0 0 12px 0;

@@ -304,10 +304,39 @@ export const ManageListingsPageComponent = props => {
         {queryListingsError ? queryError : null}
 
         <div className={css.listingPanel}>
-          <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
+          <div className={css.headingRow}>
+            <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
+            {!!listings?.length && (
+              <p className={css.upgradeMessage}>
+                <FormattedMessage id="ManageListingsPage.upgradeMessage" />
+              </p>
+            )}
+          </div>
 
           {!!listings?.length && (
             <div className={css.quotaInfo}>
+              <div className={css.quotaRow}>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.yourPlan"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      plan: subscriptionPlan
+                        ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)
+                        : 'Free',
+                    }}
+                  />
+                </p>
+                <PrimaryButtonInline
+                  onClick={() =>
+                    history.push(
+                      pathByRouteName('CMSPage', routeConfiguration, { pageId: 'pricing' })
+                    )
+                  }
+                >
+                  <FormattedMessage id="ManageListingsPage.viewPlans" />
+                </PrimaryButtonInline>
+              </div>
               <div className={css.quotaRow}>
                 <p className={css.quotaItem}>
                   <FormattedMessage
@@ -443,11 +472,8 @@ const mapDispatchToProps = dispatch => ({
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
 });
 
-const ManageListingsPage = compose(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
-)(ManageListingsPageComponent);
+const ManageListingsPage = compose(connect(mapStateToProps, mapDispatchToProps))(
+  ManageListingsPageComponent
+);
 
 export default ManageListingsPage;
