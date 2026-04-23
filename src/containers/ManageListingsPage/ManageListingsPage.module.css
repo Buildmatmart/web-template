@@ -80,41 +80,82 @@
 .quotaInfo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 16px;
   margin: 0 24px 24px 24px;
+  padding: 24px;
+  background-color: var(--colorGrey100);
+  border: 1px solid var(--colorGrey300);
+  border-radius: 4px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
 
   @media (--viewportLarge) {
     margin: 0 36px 24px 36px;
+    padding: 32px;
   }
 }
 
-.quotaRow {
+.quotaDetails {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.buyQuotaButton {
-  flex-shrink: 0;
-  padding: 4px 12px;
-  border: 1px solid var(--marketplaceColor);
-  border-radius: var(--borderRadiusMedium);
-  background-color: transparent;
-  color: var(--marketplaceColor);
-  font-size: 13px;
-  font-weight: var(--fontWeightMedium);
-  cursor: pointer;
-  transition: var(--transitionStyleButton);
+.quotaActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
 
-  &:hover {
-    background-color: var(--marketplaceColor);
-    color: var(--colorWhite);
+  @media (--viewportMedium) {
+    align-items: flex-end;
+    width: auto;
   }
+}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+.upgradeRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px;
+    column-gap: 16px;
+    align-items: center;
+  }
+}
+
+.actionRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px;
+    column-gap: 16px;
+    align-items: center;
+  }
+}
+
+.actionLabel {
+  margin: 0;
+  font-size: 13px;
+  color: var(--colorGrey700);
+  text-align: left;
+
+  @media (--viewportMedium) {
+    text-align: right;
+    max-width: 360px;
+    flex-shrink: 0;
   }
 }
 
@@ -126,6 +167,14 @@
   & strong {
     color: var(--colorGrey700);
   }
+}
+
+.quotaActionButton {
+  composes: buttonPrimaryInline from global;
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+  text-align: center;
 }
 
 .headingRow {
@@ -142,20 +191,15 @@
 }
 
 .upgradeMessage {
-  margin: 0 24px 0 24px;
+  margin: 0;
   font-size: 13px;
   color: var(--colorGrey600);
   text-align: left;
 
   @media (--viewportMedium) {
     text-align: right;
-    margin: 0 24px 0 0;
-    max-width: 260px;
-    flex-shrink: 0;
-  }
-
-  @media (--viewportLarge) {
-    margin: 0 36px 0 0;
+    max-width: 360px;
+    width: 100%;
   }
 }
 

@@ -1437,7 +1437,7 @@
   "SectionPlans.manageSubscription": "Manage Subscription",
   "SectionPlans.manageSubscriptionLoading": "Loading...",
   "ManageListingsPage.yourPlan": "<b>Your Plan:</b> {plan}",
-  "ManageListingsPage.upgradeMessage": "Upgrade your plan for inclusive feature listings or buy individual feature listings",
+  "ManageListingsPage.upgradeMessage": "Upgrade your plan for inclusive feature listings:",
   "ManageListingsPage.viewPlans": "View Plans",
   "ManageListingsPage.searchFeaturedQuota": "<b>Your Search Page Feature Listings:</b> {used}/{total}",
   "ManageListingsPage.homeFeaturedQuota": "<b>Your Homepage Feature Listings:</b> {used}/{total}",
@@ -1493,5 +1493,8 @@
   "InboxPage.default-purchase.offer-pending.status": "Offer pending",
   "InboxPage.default-purchase.provider-offer-pending.status": "Counter offer",
   "InboxPage.default-purchase.offer-accepted.status": "Offer accepted",
-  "InboxPage.default-purchase.offer-rejected.status": "Offer rejected"
+  "InboxPage.default-purchase.offer-rejected.status": "Offer rejected",
+  "ManageListingsPage.buyNow": "Buy Now",
+  "ManageListingsPage.buySearchQuotaLabel": "Buy a Search Page Feature Listing:",
+  "ManageListingsPage.buyHomeQuotaLabel": "Buy a Homepage Feature Listing:"
 }

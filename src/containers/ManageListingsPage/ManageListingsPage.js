@@ -306,16 +306,11 @@ export const ManageListingsPageComponent = props => {
         <div className={css.listingPanel}>
           <div className={css.headingRow}>
             <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
-            {!!listings?.length && (
-              <p className={css.upgradeMessage}>
-                <FormattedMessage id="ManageListingsPage.upgradeMessage" />
-              </p>
-            )}
           </div>
 
           {!!listings?.length && (
             <div className={css.quotaInfo}>
-              <div className={css.quotaRow}>
+              <div className={css.quotaDetails}>
                 <p className={css.quotaItem}>
                   <FormattedMessage
                     id="ManageListingsPage.yourPlan"
@@ -327,17 +322,6 @@ export const ManageListingsPageComponent = props => {
                     }}
                   />
                 </p>
-                <PrimaryButtonInline
-                  onClick={() =>
-                    history.push(
-                      pathByRouteName('CMSPage', routeConfiguration, { pageId: 'pricing' })
-                    )
-                  }
-                >
-                  <FormattedMessage id="ManageListingsPage.viewPlans" />
-                </PrimaryButtonInline>
-              </div>
-              <div className={css.quotaRow}>
                 <p className={css.quotaItem}>
                   <FormattedMessage
                     id="ManageListingsPage.searchFeaturedQuota"
@@ -348,15 +332,6 @@ export const ManageListingsPageComponent = props => {
                     }}
                   />
                 </p>
-                <PrimaryButtonInline
-                  inProgress={checkoutLoading === 'search-featured'}
-                  disabled={checkoutLoading !== null}
-                  onClick={() => handleBuyQuota('search-featured')}
-                >
-                  <FormattedMessage id="ManageListingsPage.buySearchQuota" />
-                </PrimaryButtonInline>
-              </div>
-              <div className={css.quotaRow}>
                 <p className={css.quotaItem}>
                   <FormattedMessage
                     id="ManageListingsPage.homeFeaturedQuota"
@@ -367,13 +342,50 @@ export const ManageListingsPageComponent = props => {
                     }}
                   />
                 </p>
-                <PrimaryButtonInline
-                  inProgress={checkoutLoading === 'home-featured'}
-                  disabled={checkoutLoading !== null}
-                  onClick={() => handleBuyQuota('home-featured')}
-                >
-                  <FormattedMessage id="ManageListingsPage.buyHomeQuota" />
-                </PrimaryButtonInline>
+              </div>
+
+              <div className={css.quotaActions}>
+                <div className={css.upgradeRow}>
+                  <p className={css.upgradeMessage}>
+                    <FormattedMessage id="ManageListingsPage.upgradeMessage" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    onClick={() =>
+                      history.push(
+                        pathByRouteName('CMSPage', routeConfiguration, { pageId: 'pricing' })
+                      )
+                    }
+                  >
+                    <FormattedMessage id="ManageListingsPage.viewPlans" />
+                  </PrimaryButtonInline>
+                </div>
+                <div className={css.actionRow}>
+                  <p className={css.actionLabel}>
+                    <FormattedMessage id="ManageListingsPage.buySearchQuotaLabel" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    inProgress={checkoutLoading === 'search-featured'}
+                    disabled={checkoutLoading !== null}
+                    onClick={() => handleBuyQuota('search-featured')}
+                  >
+                    <FormattedMessage id="ManageListingsPage.buyNow" defaultMessage="Buy Now" />
+                  </PrimaryButtonInline>
+                </div>
+                <div className={css.actionRow}>
+                  <p className={css.actionLabel}>
+                    <FormattedMessage id="ManageListingsPage.buyHomeQuotaLabel" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    inProgress={checkoutLoading === 'home-featured'}
+                    disabled={checkoutLoading !== null}
+                    onClick={() => handleBuyQuota('home-featured')}
+                  >
+                    <FormattedMessage id="ManageListingsPage.buyNow" defaultMessage="Buy Now" />
+                  </PrimaryButtonInline>
+                </div>
               </div>
             </div>
           )}
