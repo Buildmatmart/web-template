@@ -1,8 +1,5 @@
 @import '../../styles/customMediaQueries.css';
 
-.root {
-}
-
 .tabs {
   display: none;
 
@@ -170,7 +167,6 @@
 }
 
 .quotaActionButton {
-  composes: buttonPrimaryInline from global;
   width: 160px;
   min-width: 160px;
   max-width: 160px;
