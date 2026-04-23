@@ -32,6 +32,7 @@ import NotFoundPage from '../NotFoundPage/NotFoundPage';
 
 import {
   sendInquiry,
+  makeOffer,
   setInitialValues,
   fetchTimeSlots,
   fetchTransactionLineItems,
@@ -42,6 +43,7 @@ import {
   ErrorPage,
   handleContactUser,
   handleSubmitInquiry,
+  handleSubmitOffer,
   handleNavigateToMakeOfferPage,
   handleNavigateToRequestQuotePage,
   handleSubmit,
@@ -57,6 +59,7 @@ import CustomListingFields from './CustomListingFields';
 import ListingPageAccessWrapper from './ListingPageAccessWrapper';
 
 import css from './ListingPage.module.css';
+import MakeOfferModal from './MakeOfferModal/MakeOfferModal.js';
 
 const MIN_LENGTH_FOR_LONG_WORDS_IN_TITLE = 16;
 
@@ -65,6 +68,7 @@ export const ListingPageComponent = props => {
     props.inquiryModalOpenForListingId === props.params.id
   );
   const [mounted, setMounted] = useState(false);
+  const [offerModalOpen, setOfferModalOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -85,9 +89,12 @@ export const ListingPageComponent = props => {
     fetchReviewsError,
     sendInquiryInProgress,
     sendInquiryError,
+    makeOfferInProgress,
+    makeOfferError,
     history,
     callSetInitialValues,
     onSendInquiry,
+    onMakeOffer,
     onInitializeCardPaymentData,
     config,
     routeConfiguration,
@@ -336,9 +343,27 @@ export const ListingPageComponent = props => {
               dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
               marketplaceName={config.marketplaceName}
               showListingImage={showListingImage}
+              onMakeOffer={() => setOfferModalOpen(true)}
             />
           </div>
         </div>
+
+        <MakeOfferModal
+          isOpen={offerModalOpen}
+          onClose={() => setOfferModalOpen(false)}
+          onManageDisableScrolling={onManageDisableScrolling}
+          price={price}
+          inProgress={makeOfferInProgress}
+          submitError={makeOfferError}
+          onSubmitOffer={handleSubmitOffer({
+            history,
+            params,
+            getListing,
+            onMakeOffer,
+            routes: routeConfiguration,
+            setOfferModalOpen,
+          })}
+        />
       </LayoutSingleColumn>
     </Page>
   );
@@ -390,6 +415,8 @@ const ListingPage = props => {
     timeSlotsForDate,
     sendInquiryInProgress,
     sendInquiryError,
+    makeOfferInProgress,
+    makeOfferError,
     lineItems,
     fetchLineItemsInProgress,
     fetchLineItemsError,
@@ -434,6 +461,10 @@ const ListingPage = props => {
   const onSendInquiry = useCallback((listing, message) => dispatch(sendInquiry(listing, message)), [
     dispatch,
   ]);
+  const onMakeOffer = useCallback(
+    (listing, offerAmount, currency) => dispatch(makeOffer(listing, offerAmount, currency)),
+    [dispatch]
+  );
   const onInitializeCardPaymentData = useCallback(() => dispatch(initializeCardPaymentData()), [
     dispatch,
   ]);
@@ -463,10 +494,13 @@ const ListingPage = props => {
       fetchLineItemsError={fetchLineItemsError}
       sendInquiryInProgress={sendInquiryInProgress}
       sendInquiryError={sendInquiryError}
+      makeOfferInProgress={makeOfferInProgress}
+      makeOfferError={makeOfferError}
       onManageDisableScrolling={onManageDisableScrolling}
       callSetInitialValues={callSetInitialValues}
       onFetchTransactionLineItems={onFetchTransactionLineItems}
       onSendInquiry={onSendInquiry}
+      onMakeOffer={onMakeOffer}
       onInitializeCardPaymentData={onInitializeCardPaymentData}
       onFetchTimeSlots={onFetchTimeSlots}
     />

@@ -164,6 +164,13 @@
   }
 }
 
+.ctaButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
 .openOrderForm {
   /* Ensure that mobile button is over Footer too */
   z-index: 9;

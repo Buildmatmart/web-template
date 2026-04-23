@@ -1,0 +1,1 @@
+{{set-translations (asset "content/email-texts.json")}}{{t "PurchaseRejectedOffer.Subject" "{providerDisplayName} rejected your offer" providerDisplayName=transaction.provider.display-name }}

@@ -305,6 +305,8 @@ const OrderPanel = props => {
     fetchLineItemsError,
     payoutDetailsWarning,
     showListingImage,
+    onMakeOffer,
+    hidePriceAvatar,
   } = props;
 
   const publicData = listing?.attributes?.publicData || {};
@@ -413,6 +415,7 @@ const OrderPanel = props => {
     fetchLineItemsInProgress,
     fetchLineItemsError,
     payoutDetailsWarning,
+    onMakeOffer,
   };
 
   const showClosedListingHelpText = listing.id && isClosed;
@@ -451,23 +454,27 @@ const OrderPanel = props => {
           </div>
         )}
 
-        <PriceMaybe
-          price={price}
-          publicData={publicData}
-          validListingTypes={validListingTypes}
-          intl={intl}
-          marketplaceCurrency={marketplaceCurrency}
-        />
+        {!hidePriceAvatar && (
+          <PriceMaybe
+            price={price}
+            publicData={publicData}
+            validListingTypes={validListingTypes}
+            intl={intl}
+            marketplaceCurrency={marketplaceCurrency}
+          />
+        )}
 
-        <div className={css.author}>
-          <AvatarSmall user={author} className={css.providerAvatar} />
-          <span className={css.providerNameLinked}>
-            <FormattedMessage id="OrderPanel.author" values={{ name: authorLink }} />
-          </span>
-          <span className={css.providerNamePlain}>
-            <FormattedMessage id="OrderPanel.author" values={{ name: authorDisplayName }} />
-          </span>
-        </div>
+        {!hidePriceAvatar && (
+          <div className={css.author}>
+            <AvatarSmall user={author} className={css.providerAvatar} />
+            <span className={css.providerNameLinked}>
+              <FormattedMessage id="OrderPanel.author" values={{ name: authorLink }} />
+            </span>
+            <span className={css.providerNamePlain}>
+              <FormattedMessage id="OrderPanel.author" values={{ name: authorDisplayName }} />
+            </span>
+          </div>
+        )}
 
         {showPriceMissing ? (
           <PriceMissing />
@@ -575,32 +582,39 @@ const OrderPanel = props => {
             <FormattedMessage id="OrderPanel.closedListingButtonText" />
           </div>
         ) : (
-          <PrimaryButton
-            id={ORDER_PANEL_SUBMIT_BUTTON_ID}
-            onClick={handleSubmit(
-              isOwnListing,
-              isClosed,
-              showInquiryForm || showNegotiationForm,
-              onSubmit,
-              history,
-              location
-            )}
-            disabled={isOutOfStock}
-          >
-            {isBooking ? (
-              <FormattedMessage id="OrderPanel.ctaButtonMessageBooking" />
-            ) : isOutOfStock ? (
-              <FormattedMessage id="OrderPanel.ctaButtonMessageNoStock" />
-            ) : isPurchase ? (
-              <FormattedMessage id="OrderPanel.ctaButtonMessagePurchase" />
-            ) : showNegotiationForm ? (
-              <FormattedMessage id="OrderPanel.ctaButtonMessageMakeOffer" />
-            ) : showRequestQuoteForm ? (
-              <FormattedMessage id="OrderPanel.ctaButtonMessageRequestAQuote" />
-            ) : (
-              <FormattedMessage id="OrderPanel.ctaButtonMessageInquiry" />
-            )}
-          </PrimaryButton>
+          <div className={css.ctaButtons}>
+            <PrimaryButton
+              id={ORDER_PANEL_SUBMIT_BUTTON_ID}
+              onClick={handleSubmit(
+                isOwnListing,
+                isClosed,
+                showInquiryForm || showNegotiationForm,
+                onSubmit,
+                history,
+                location
+              )}
+              disabled={isOutOfStock}
+            >
+              {isBooking ? (
+                <FormattedMessage id="OrderPanel.ctaButtonMessageBooking" />
+              ) : isOutOfStock ? (
+                <FormattedMessage id="OrderPanel.ctaButtonMessageNoStock" />
+              ) : isPurchase ? (
+                <FormattedMessage id="OrderPanel.ctaButtonMessagePurchase" />
+              ) : showNegotiationForm ? (
+                <FormattedMessage id="OrderPanel.ctaButtonMessageMakeOffer" />
+              ) : showRequestQuoteForm ? (
+                <FormattedMessage id="OrderPanel.ctaButtonMessageRequestAQuote" />
+              ) : (
+                <FormattedMessage id="OrderPanel.ctaButtonMessageInquiry" />
+              )}
+            </PrimaryButton>
+            {isPurchase && !isOutOfStock && onMakeOffer ? (
+              <PrimaryButton type="button" onClick={onMakeOffer}>
+                <FormattedMessage id="OrderPanel.makeOfferButton" />
+              </PrimaryButton>
+            ) : null}
+          </div>
         )}
       </div>
     </div>

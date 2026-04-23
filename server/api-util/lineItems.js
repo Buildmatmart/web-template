@@ -142,7 +142,7 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
   const { unitType, priceVariants, priceVariationsEnabled } = publicData;
 
   const isBookable = ['day', 'night', 'hour', 'fixed'].includes(unitType);
-  const isNegotiationUnitType = ['offer', 'request'].includes(unitType);
+  const isNegotiationUnitType = ['offer', 'request', 'item'].includes(unitType);
   const priceAttribute = listing.attributes.price;
   const currency = priceAttribute?.currency || orderData.currency;
 

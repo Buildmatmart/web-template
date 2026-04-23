@@ -4,6 +4,60 @@
    :actor :actor.role/customer,
    :actions [{:name :action/update-protected-data}],
    :to :state/inquiry}
+  {:name :transition/make-offer,
+   :actor :actor.role/customer,
+   :actions
+   [{:name :action/privileged-set-line-items}
+    {:name :action/update-protected-data}
+    {:name :action/privileged-update-metadata}],
+   :privileged? true, 
+   :to :state/offer-pending}
+  {:name :transition/provider-reject-offer,
+   :actor :actor.role/provider,
+   :actions
+   [{:name :action/update-protected-data}],
+   :from :state/offer-pending,
+   :to :state/offer-rejected}
+  {:name :transition/provider-counter-offer,
+   :actor :actor.role/provider,
+   :actions
+   [{:name :action/privileged-set-line-items}
+    {:name :action/update-protected-data}
+    {:name :action/privileged-update-metadata}],
+   :privileged? true, 
+   :from :state/offer-pending,
+   :to :state/provider-offer-pending} 
+  {:name :transition/customer-counter-offer,
+   :actor :actor.role/customer,
+   :actions
+   [{:name :action/privileged-set-line-items}
+    {:name :action/update-protected-data}
+    {:name :action/privileged-update-metadata}],
+   :privileged? true, 
+   :from :state/provider-offer-pending,
+   :to :state/offer-pending}  
+  {:name :transition/customer-accept-offer,
+   :actor :actor.role/customer,
+   :actions
+   [{:name :action/update-protected-data}],
+   :from :state/provider-offer-pending,
+   :to :state/offer-accepted} 
+  {:name :transition/provider-accept-offer,
+   :actor :actor.role/provider,
+   :actions
+   [{:name :action/update-protected-data}],
+   :from :state/offer-pending,
+   :to :state/offer-accepted}
+  {:name :transition/request-payment-after-negotiation,
+   :actor :actor.role/customer,
+   :privileged? true,
+   :actions
+   [{:name :action/update-protected-data}
+    {:name :action/create-pending-stock-reservation}
+    {:name :action/privileged-set-line-items}
+    {:name :action/stripe-create-payment-intent}],
+   :from :state/offer-accepted, 
+   :to :state/pending-payment}   
   {:name :transition/request-payment,
    :actor :actor.role/customer,
    :privileged? true,
@@ -322,4 +376,24 @@
   {:name :notification/review-by-customer-second,
    :on :transition/review-2-by-customer,
    :to :actor.role/provider,
-   :template :purchase-review-by-other-party-published}]}
+   :template :purchase-review-by-other-party-published}
+  {:name :notification/purchase-new-offer,
+   :on :transition/make-offer,
+   :to :actor.role/provider,
+   :template :purchase-new-offer}
+  {:name :notification/purchase-provider-accepted-offer,
+   :on :transition/provider-accept-offer,
+   :to :actor.role/customer,
+   :template :purchase-accepted-offer}
+  {:name :notification/purchase-rejected-offer,
+   :on :transition/provider-reject-offer,
+   :to :actor.role/customer,
+   :template :purchase-rejected-offer}
+  {:name :notification/purchase-new-provider-counter-offer,
+   :on :transition/provider-counter-offer,
+   :to :actor.role/customer,
+   :template :purchase-new-provider-counter-offer}
+  {:name :notification/purchase-new-customer-counter-offer,
+   :on :transition/customer-counter-offer,
+   :to :actor.role/provider,
+   :template :purchase-new-customer-counter-offer}]}

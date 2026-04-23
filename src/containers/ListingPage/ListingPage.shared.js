@@ -213,7 +213,7 @@ export const getDerivedRenderData = ({
   const authorNeedsPayoutDetails =
     ['booking', 'purchase'].includes(processType) || (isNegotiation && unitType === OFFER);
   const noPayoutDetailsSetWithOwnListing =
-    isOwnListing && (authorNeedsPayoutDetails && !currentUser?.attributes?.stripeConnected);
+    isOwnListing && authorNeedsPayoutDetails && !currentUser?.attributes?.stripeConnected;
 
   const payoutDetailsWarning = noPayoutDetailsSetWithOwnListing ? (
     <span className={payoutDetailsWarningClassName}>
@@ -346,6 +346,29 @@ export const handleSubmitInquiry = parameters => values => {
         listing.attributes.publicData.unitType === REQUEST ? 'SaleDetailsPage' : 'OrderDetailsPage';
       // Redirect to OrderDetailsPage or SaleDetailsPage
       history.push(createResourceLocatorString(transactionPage, routes, { id: txId.uuid }, {}));
+    })
+    .catch(() => {
+      // Ignore, error handling in duck file
+    });
+};
+
+/**
+ * Callback for the make-offer modal to submit an offer on ListingPage.
+ * Initiates the make-offer transition and redirects the buyer to OrderDetailsPage.
+ *
+ * @param {Object} parameters all the info needed to submit an offer.
+ */
+export const handleSubmitOffer = parameters => amount => {
+  const { history, params, getListing, onMakeOffer, routes, setOfferModalOpen } = parameters;
+
+  const listingId = new UUID(params.id);
+  const listing = getListing(listingId);
+
+  onMakeOffer(listing, amount, listing.attributes.price.currency)
+    .then(txId => {
+      setOfferModalOpen(false);
+      // Offer is always initiated by the customer, so redirect to OrderDetailsPage
+      history.push(createResourceLocatorString('OrderDetailsPage', routes, { id: txId.uuid }, {}));
     })
     .catch(() => {
       // Ignore, error handling in duck file

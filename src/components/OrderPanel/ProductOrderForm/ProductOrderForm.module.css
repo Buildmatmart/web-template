@@ -76,6 +76,15 @@
   text-align: center;
 }
 
+.makeOfferButton {
+  padding: 0 24px;
+  margin-top: 16px;
+
+  @media (--viewportMedium) {
+    padding: 0;
+  }
+}
+
 .error {
   composes: h4 from global;
   color: var(--colorFail);

@@ -23,6 +23,7 @@ import {
   getProcess,
   isBookingProcess,
   isNegotiationProcess,
+  PURCHASE_PROCESS_NAME,
 } from '../../transactions/transaction';
 
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -324,6 +325,7 @@ const makeTransitionPayloadCreator = (
   const transaction = getState()?.marketplaceData?.entities?.transaction?.[txId?.uuid];
   const processName = resolveLatestProcessName(transaction?.attributes?.processName);
   const process = getProcess(processName);
+  const isPurchase = processName === PURCHASE_PROCESS_NAME;
 
   // This calls the client app's server to make a privileged transition.
   const privilegedTransition = () =>
@@ -333,7 +335,9 @@ const makeTransitionPayloadCreator = (
       bodyParams: {
         id: txId,
         transition: transitionName,
-        params: {}, // NOTE: lineItems and metadata are included on the server-side.
+        params: {
+          ...(isPurchase ? { stockReservationQuantity: 1 } : {}),
+        }, // NOTE: lineItems and metadata are included on the server-side.
       },
       queryParams: {
         expand: true,

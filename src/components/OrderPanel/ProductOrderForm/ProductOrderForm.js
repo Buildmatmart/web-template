@@ -134,6 +134,7 @@ const renderForm = formRenderProps => {
     payoutDetailsWarning,
     marketplaceName,
     values,
+    onMakeOffer,
   } = formRenderProps;
 
   // Note: don't add custom logic before useEffect
@@ -297,6 +298,13 @@ const renderForm = formRenderProps => {
           <FormattedMessage id="ProductOrderForm.finePrintNoStock" values={{ contactSellerLink }} />
         ) : null}
       </p>
+      {!isOwnListing && hasStock && onMakeOffer ? (
+        <div className={css.makeOfferButton}>
+          <PrimaryButton type="button" onClick={onMakeOffer}>
+            <FormattedMessage id="ProductOrderForm.makeOfferButton" />
+          </PrimaryButton>
+        </div>
+      ) : null}
     </Form>
   );
 };

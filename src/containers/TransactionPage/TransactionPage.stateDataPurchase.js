@@ -13,7 +13,12 @@ import {
  * @param {*} processInfo  details about process
  */
 export const getStateDataForPurchaseProcess = (txInfo, processInfo) => {
-  const { transaction, transactionRole, nextTransitions } = txInfo;
+  const {
+    transaction,
+    transactionRole,
+    nextTransitions,
+    onOpenMakeCounterOfferModal,
+  } = txInfo;
   const isProviderBanned = transaction?.provider?.attributes?.banned;
   const isShippable = transaction?.attributes?.protectedData?.deliveryMethod === 'shipping';
   const _ = CONDITIONAL_RESOLVER_WILDCARD;
@@ -39,6 +44,79 @@ export const getStateDataForPurchaseProcess = (txInfo, processInfo) => {
       return { processName, processState, showOrderPanel };
     })
     .cond([states.INQUIRY, PROVIDER], () => {
+      return { processName, processState, showDetailCardHeadings: true };
+    })
+    .cond([states.OFFER_PENDING, CUSTOMER], () => {
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+      };
+    })
+    .cond([states.OFFER_PENDING, PROVIDER], () => {
+      const overwritesForCounterOffer = {
+        onAction: onOpenMakeCounterOfferModal,
+      };
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+        showActionButtons: true,
+        primaryButtonProps: actionButtonProps(transitions.PROVIDER_ACCEPT_OFFER, PROVIDER),
+        secondaryButtonProps: actionButtonProps(transitions.PROVIDER_REJECT_OFFER, PROVIDER),
+        tertiaryButtonProps: actionButtonProps(
+          transitions.PROVIDER_COUNTER_OFFER,
+          PROVIDER,
+          overwritesForCounterOffer
+        ),
+      };
+    })
+    .cond([states.PROVIDER_OFFER_PENDING, CUSTOMER], () => {
+      const overwritesForCounterOffer = {
+        onAction: onOpenMakeCounterOfferModal,
+      };
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+        showActionButtons: true,
+        primaryButtonProps: actionButtonProps(transitions.CUSTOMER_ACCEPT_OFFER, CUSTOMER),
+        secondaryButtonProps: actionButtonProps(
+          transitions.CUSTOMER_COUNTER_OFFER,
+          CUSTOMER,
+          overwritesForCounterOffer
+        ),
+      };
+    })
+    .cond([states.PROVIDER_OFFER_PENDING, PROVIDER], () => {
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+      };
+    })
+    .cond([states.OFFER_ACCEPTED, CUSTOMER], () => {
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+        showOrderPanel: true,
+      };
+    })
+    .cond([states.OFFER_ACCEPTED, PROVIDER], () => {
+      return {
+        processName,
+        processState,
+        showDetailCardHeadings: true,
+        showExtraInfo: true,
+      };
+    })
+    .cond([states.OFFER_REJECTED, _], () => {
       return { processName, processState, showDetailCardHeadings: true };
     })
     .cond([states.PURCHASED, CUSTOMER], () => {

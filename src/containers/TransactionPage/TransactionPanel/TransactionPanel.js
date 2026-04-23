@@ -401,7 +401,7 @@ export class TransactionPanelComponent extends Component {
                   intl={intl}
                 />
                 {showOrderPanel ? orderPanel : null}
-                {showBreakDown ? (
+                {showBreakDown && !showOrderPanel ? (
                   <BreakdownMaybe
                     className={css.breakdownContainer}
                     orderBreakdown={orderBreakdown}

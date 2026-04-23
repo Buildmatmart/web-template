@@ -1,0 +1,49 @@
+.root {
+  padding: 0 24px 24px;
+}
+
+.heading {
+  margin: 0 0 8px 0;
+}
+
+.subHeading {
+  margin: 0 0 24px 0;
+  color: var(--colorGrey600);
+  font-size: 14px;
+}
+
+.inputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.inputLabel {
+  font-weight: var(--fontWeightMedium);
+  font-size: 14px;
+  color: var(--colorGrey700);
+}
+
+.input {
+  border: 1px solid var(--colorGrey300);
+  border-radius: var(--borderRadiusMedium);
+  padding: 10px 14px;
+  font-size: 16px;
+  width: 100%;
+  outline: none;
+
+  &:focus {
+    border-color: var(--marketplaceColor);
+  }
+}
+
+.submitButton {
+  width: 100%;
+}
+
+.submitError {
+  margin: 8px 0 0;
+  color: var(--colorFail);
+  font-size: 14px;
+}
