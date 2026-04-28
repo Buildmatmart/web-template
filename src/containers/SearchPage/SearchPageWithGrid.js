@@ -21,6 +21,7 @@ import {
 } from './SearchPage.shared';
 
 import FilterComponent from './FilterComponent';
+import LocationFilter from './LocationFilter/LocationFilter';
 import MainPanelHeader from './MainPanelHeader/MainPanelHeader';
 import SearchFiltersMobile from './SearchFiltersMobile/SearchFiltersMobile';
 import SortBy from './SortBy/SortBy';
@@ -141,6 +142,7 @@ export class SearchPageComponent extends Component {
       searchParams = {},
       routeConfiguration,
       config,
+      history,
       params: currentPathParams = {},
       currentUser,
     } = this.props;
@@ -219,6 +221,15 @@ export class SearchPageComponent extends Component {
         <div className={css.layoutWrapperContainer}>
           <aside className={css.layoutWrapperFilterColumn} data-testid="filterColumnAside">
             <div className={css.filterColumnContent}>
+              <LocationFilter
+                id="SearchFiltersDesktop.location"
+                className={css.filter}
+                history={history}
+                routeConfiguration={routeConfiguration}
+                config={config}
+                location={location}
+                validQueryParams={validQueryParams}
+              />
               {availableFilters.map(filterConfig => {
                 const key = `SearchFiltersDesktop.${filterConfig.scope || 'built-in'}.${
                   filterConfig.key
@@ -269,6 +280,14 @@ export class SearchPageComponent extends Component {
                 noResultsInfo={noResultsInfo}
                 location={location}
               >
+                <LocationFilter
+                  id="SearchFiltersMobile.location"
+                  history={history}
+                  routeConfiguration={routeConfiguration}
+                  config={config}
+                  location={location}
+                  validQueryParams={validQueryParams}
+                />
                 {availableFilters.map(filterConfig => {
                   const key = `SearchFiltersMobile.${filterConfig.scope || 'built-in'}.${
                     filterConfig.key

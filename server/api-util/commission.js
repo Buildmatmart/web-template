@@ -3,8 +3,8 @@
  * Rates are percentages: { launch: % for first 3 months, afterLaunch: % thereafter }
  */
 const PLAN_COMMISSION_RATES = {
-  pro: { launch: 0, afterLaunch: 4 },
-  elite: { launch: 0, afterLaunch: 4 },
+  pro: { launch: 2.5, afterLaunch: 5 },
+  elite: { launch: 2.5, afterLaunch: 5 },
   business: { launch: 0, afterLaunch: 2.5 },
 };
 
@@ -46,8 +46,8 @@ const resolveCommissionPercentage = authorAttributes => {
     return planRates[inLaunch ? 'launch' : 'afterLaunch'];
   }
 
-  // No plan: 2% during launch, 4% after
-  return inLaunch ? 2 : 4;
+  // No plan: 4% during launch, 8% after
+  return inLaunch ? 4 : 8;
 };
 
 /**

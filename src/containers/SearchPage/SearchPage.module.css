@@ -273,6 +273,7 @@
 
 .searchListingsPanel {
   flex-grow: 1;
+  isolation: isolate;
 }
 
 .mapPanel {
