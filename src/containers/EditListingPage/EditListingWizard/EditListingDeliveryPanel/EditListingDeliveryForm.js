@@ -132,6 +132,52 @@ export const EditListingDeliveryForm = props => (
 
       return (
         <Form className={classes} onSubmit={handleSubmit}>
+          <FieldLocationAutocompleteInput
+            rootClassName={css.input}
+            inputClassName={css.locationAutocompleteInput}
+            iconClassName={css.locationAutocompleteInputIcon}
+            predictionsClassName={css.predictionsRoot}
+            validClassName={css.validLocation}
+            // autoFocus={autoFocus}
+            name="location"
+            id={`${formId}.location`}
+            label={intl.formatMessage({ id: 'EditListingDeliveryForm.address' })}
+            placeholder={intl.formatMessage({
+              id: 'EditListingDeliveryForm.addressPlaceholder',
+            })}
+            useDefaultPredictions={false}
+            format={identity}
+            valueFromForm={values.location}
+            validate={
+              pickupEnabled
+                ? composeValidators(
+                    autocompleteSearchRequired(addressRequiredMessage),
+                    autocompletePlaceSelected(addressNotRecognizedMessage)
+                  )
+                : () => {}
+            }
+            hideErrorMessage={!pickupEnabled}
+            // Whatever parameters are being used to calculate
+            // the validation function need to be combined in such
+            // a way that, when they change, this key prop
+            // changes, thus reregistering this field (and its
+            // validation function) with Final Form.
+            // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
+            key={pickupEnabled ? 'locationValidation' : 'noLocationValidation'}
+            typeLimit={['locality', 'neighborhood']}
+          />
+
+          <FieldTextInput
+            className={css.input}
+            type="text"
+            name="building"
+            id={formId ? `${formId}.building` : 'building'}
+            label={intl.formatMessage({ id: 'EditListingDeliveryForm.building' }, { optionalText })}
+            placeholder={intl.formatMessage({
+              id: 'EditListingDeliveryForm.buildingPlaceholder',
+            })}
+          />
+
           <FieldCheckbox
             id={formId ? `${formId}.pickup` : 'pickup'}
             className={classNames(css.deliveryCheckbox, { [css.hidden]: !displayMultipleDelivery })}
@@ -151,56 +197,6 @@ export const EditListingDeliveryForm = props => (
                 <FormattedMessage id="EditListingDeliveryForm.showListingFailed" />
               </p>
             ) : null}
-
-            <FieldLocationAutocompleteInput
-              disabled={!pickupEnabled}
-              rootClassName={css.input}
-              inputClassName={css.locationAutocompleteInput}
-              iconClassName={css.locationAutocompleteInputIcon}
-              predictionsClassName={css.predictionsRoot}
-              validClassName={css.validLocation}
-              autoFocus={autoFocus}
-              name="location"
-              id={`${formId}.location`}
-              label={intl.formatMessage({ id: 'EditListingDeliveryForm.address' })}
-              placeholder={intl.formatMessage({
-                id: 'EditListingDeliveryForm.addressPlaceholder',
-              })}
-              useDefaultPredictions={false}
-              format={identity}
-              valueFromForm={values.location}
-              validate={
-                pickupEnabled
-                  ? composeValidators(
-                      autocompleteSearchRequired(addressRequiredMessage),
-                      autocompletePlaceSelected(addressNotRecognizedMessage)
-                    )
-                  : () => {}
-              }
-              hideErrorMessage={!pickupEnabled}
-              // Whatever parameters are being used to calculate
-              // the validation function need to be combined in such
-              // a way that, when they change, this key prop
-              // changes, thus reregistering this field (and its
-              // validation function) with Final Form.
-              // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
-              key={pickupEnabled ? 'locationValidation' : 'noLocationValidation'}
-            />
-
-            <FieldTextInput
-              className={css.input}
-              type="text"
-              name="building"
-              id={formId ? `${formId}.building` : 'building'}
-              label={intl.formatMessage(
-                { id: 'EditListingDeliveryForm.building' },
-                { optionalText }
-              )}
-              placeholder={intl.formatMessage({
-                id: 'EditListingDeliveryForm.buildingPlaceholder',
-              })}
-              disabled={!pickupEnabled}
-            />
           </div>
 
           <FieldCheckbox
@@ -211,56 +207,21 @@ export const EditListingDeliveryForm = props => (
             value="shipping"
           />
 
-          <div className={shippingClasses}>
-            <FieldCurrencyInput
-              id={
-                formId
-                  ? `${formId}.shippingPriceInSubunitsOneItem`
-                  : 'shippingPriceInSubunitsOneItem'
-              }
-              name="shippingPriceInSubunitsOneItem"
-              className={css.input}
-              label={intl.formatMessage({
-                id: 'EditListingDeliveryForm.shippingOneItemLabel',
-              })}
-              placeholder={intl.formatMessage({
-                id: 'EditListingDeliveryForm.shippingOneItemPlaceholder',
-              })}
-              currencyConfig={currencyConfig}
-              disabled={!shippingEnabled}
-              validate={
-                shippingEnabled
-                  ? required(
-                      intl.formatMessage({
-                        id: 'EditListingDeliveryForm.shippingOneItemRequired',
-                      })
-                    )
-                  : null
-              }
-              hideErrorMessage={!shippingEnabled}
-              // Whatever parameters are being used to calculate
-              // the validation function need to be combined in such
-              // a way that, when they change, this key prop
-              // changes, thus reregistering this field (and its
-              // validation function) with Final Form.
-              // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
-              key={shippingEnabled ? 'oneItemValidation' : 'noOneItemValidation'}
-            />
-
-            {allowOrdersOfMultipleItems ? (
+          {shippingEnabled && (
+            <div className={shippingClasses}>
               <FieldCurrencyInput
                 id={
                   formId
-                    ? `${formId}.shippingPriceInSubunitsAdditionalItems`
-                    : 'shippingPriceInSubunitsAdditionalItems'
+                    ? `${formId}.shippingPriceInSubunitsOneItem`
+                    : 'shippingPriceInSubunitsOneItem'
                 }
-                name="shippingPriceInSubunitsAdditionalItems"
+                name="shippingPriceInSubunitsOneItem"
                 className={css.input}
                 label={intl.formatMessage({
-                  id: 'EditListingDeliveryForm.shippingAdditionalItemsLabel',
+                  id: 'EditListingDeliveryForm.shippingOneItemLabel',
                 })}
                 placeholder={intl.formatMessage({
-                  id: 'EditListingDeliveryForm.shippingAdditionalItemsPlaceholder',
+                  id: 'EditListingDeliveryForm.shippingOneItemPlaceholder',
                 })}
                 currencyConfig={currencyConfig}
                 disabled={!shippingEnabled}
@@ -268,7 +229,7 @@ export const EditListingDeliveryForm = props => (
                   shippingEnabled
                     ? required(
                         intl.formatMessage({
-                          id: 'EditListingDeliveryForm.shippingAdditionalItemsRequired',
+                          id: 'EditListingDeliveryForm.shippingOneItemRequired',
                         })
                       )
                     : null
@@ -280,10 +241,70 @@ export const EditListingDeliveryForm = props => (
                 // changes, thus reregistering this field (and its
                 // validation function) with Final Form.
                 // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
-                key={shippingEnabled ? 'additionalItemsValidation' : 'noAdditionalItemsValidation'}
+                key={shippingEnabled ? 'oneItemValidation' : 'noOneItemValidation'}
               />
-            ) : null}
-          </div>
+
+              {allowOrdersOfMultipleItems ? (
+                <FieldCurrencyInput
+                  id={
+                    formId
+                      ? `${formId}.shippingPriceInSubunitsAdditionalItems`
+                      : 'shippingPriceInSubunitsAdditionalItems'
+                  }
+                  name="shippingPriceInSubunitsAdditionalItems"
+                  className={css.input}
+                  label={intl.formatMessage({
+                    id: 'EditListingDeliveryForm.shippingAdditionalItemsLabel',
+                  })}
+                  placeholder={intl.formatMessage({
+                    id: 'EditListingDeliveryForm.shippingAdditionalItemsPlaceholder',
+                  })}
+                  currencyConfig={currencyConfig}
+                  disabled={!shippingEnabled}
+                  validate={
+                    shippingEnabled
+                      ? required(
+                          intl.formatMessage({
+                            id: 'EditListingDeliveryForm.shippingAdditionalItemsRequired',
+                          })
+                        )
+                      : null
+                  }
+                  hideErrorMessage={!shippingEnabled}
+                  // Whatever parameters are being used to calculate
+                  // the validation function need to be combined in such
+                  // a way that, when they change, this key prop
+                  // changes, thus reregistering this field (and its
+                  // validation function) with Final Form.
+                  // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
+                  key={
+                    shippingEnabled ? 'additionalItemsValidation' : 'noAdditionalItemsValidation'
+                  }
+                />
+              ) : null}
+
+              <FieldTextInput
+                id={formId ? `${formId}.deliveryRadiusKm` : 'deliveryRadiusKm'}
+                name="deliveryRadiusKm"
+                className={css.input}
+                type="number"
+                label={intl.formatMessage({ id: 'EditListingDeliveryForm.deliveryRadiusLabel' })}
+                placeholder={intl.formatMessage({
+                  id: 'EditListingDeliveryForm.deliveryRadiusPlaceholder',
+                })}
+                validate={
+                  shippingEnabled
+                    ? required(
+                        intl.formatMessage({
+                          id: 'EditListingDeliveryForm.deliveryRadiusRequired',
+                        })
+                      )
+                    : null
+                }
+                key={shippingEnabled ? 'deliveryRadiusValidation' : 'noDeliveryRadiusValidation'}
+              />
+            </div>
+          )}
 
           <Button
             className={css.submitButton}

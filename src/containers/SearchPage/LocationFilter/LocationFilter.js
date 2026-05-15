@@ -15,10 +15,10 @@ import css from './LocationFilter.module.css';
 
 const { LatLng: SDKLatLng, LatLngBounds: SDKLatLngBounds } = sdkTypes;
 
-const MILES_TO_METERS = 1609.34;
+const KM_TO_METERS = 1000;
 const DISTANCE_MIN = 1;
-const DISTANCE_MAX = 250;
-const DISTANCE_DEFAULT = 50;
+const DISTANCE_MAX = 200;
+const DISTANCE_DEFAULT = 150;
 
 const LocationFilter = props => {
   const { id, className, history, routeConfiguration, config, location, validQueryParams } = props;
@@ -36,7 +36,7 @@ const LocationFilter = props => {
 
   const [isOpen, setIsOpen] = useState(true);
   const [locationValue, setLocationValue] = useState(() => makeLocationValue(address, origin, bounds));
-  const [distanceMiles, setDistanceMiles] = useState(DISTANCE_DEFAULT);
+  const [distanceKm, setDistanceKm] = useState(DISTANCE_DEFAULT);
 
   // Sync when URL address changes externally (e.g. via the topbar search or browser back)
   const prevAddressRef = useRef(address);
@@ -70,12 +70,12 @@ const LocationFilter = props => {
   };
 
   const handleDistanceChange = e => {
-    const miles = Number(e.target.value);
-    setDistanceMiles(miles);
+    const km = Number(e.target.value);
+    setDistanceKm(km);
 
     // If a location is already selected, recalculate bounds with the new distance
     if (origin && typeof window !== 'undefined' && window.mapboxgl) {
-      const meters = miles * MILES_TO_METERS;
+      const meters = km * KM_TO_METERS;
       const mboxBounds = new window.mapboxgl.LngLat(origin.lng, origin.lat).toBounds(meters);
       const newBounds = new SDKLatLngBounds(
         new SDKLatLng(mboxBounds.getNorth(), mboxBounds.getEast()),
@@ -143,23 +143,23 @@ const LocationFilter = props => {
           }}
           meta={{ valid: true, touched: false }}
           typeLimit={['locality', 'neighborhood']}
-          boundsDistance={distanceMiles * MILES_TO_METERS}
+          boundsDistance={distanceKm * KM_TO_METERS}
         />
         <div className={css.distanceWrapper}>
           <div className={css.distanceLabel}>
-            {intl.formatMessage({ id: 'LocationFilter.distanceLabel' }, { miles: distanceMiles })}
+            {intl.formatMessage({ id: 'LocationFilter.distanceLabel' }, { km: distanceKm })}
           </div>
           <input
             type="range"
             min={DISTANCE_MIN}
             max={DISTANCE_MAX}
-            value={distanceMiles}
+            value={distanceKm}
             onChange={handleDistanceChange}
             className={css.distanceSlider}
           />
           <div className={css.distanceRange}>
-            <span>{DISTANCE_MIN} mi</span>
-            <span>{DISTANCE_MAX} mi</span>
+            <span>{DISTANCE_MIN} km</span>
+            <span>{DISTANCE_MAX} km</span>
           </div>
         </div>
         {hasValue ? (

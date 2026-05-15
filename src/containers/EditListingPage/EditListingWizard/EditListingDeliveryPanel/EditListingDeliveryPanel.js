@@ -41,6 +41,7 @@ const getInitialValues = props => {
     pickupEnabled,
     shippingPriceInSubunitsOneItem,
     shippingPriceInSubunitsAdditionalItems,
+    deliveryRadiusKm,
   } = publicData;
   const deliveryOptions = [];
 
@@ -73,6 +74,7 @@ const getInitialValues = props => {
     deliveryOptions,
     shippingPriceInSubunitsOneItem: shippingOneItemAsMoney,
     shippingPriceInSubunitsAdditionalItems: shippingAdditionalItemsAsMoney,
+    deliveryRadiusKm,
   };
 };
 
@@ -160,6 +162,7 @@ const EditListingDeliveryPanel = props => {
               shippingPriceInSubunitsOneItem,
               shippingPriceInSubunitsAdditionalItems,
               deliveryOptions,
+              deliveryRadiusKm,
             } = values;
 
             const shippingEnabled = deliveryOptions.includes('shipping');
@@ -189,6 +192,7 @@ const EditListingDeliveryPanel = props => {
                 ...pickupDataMaybe,
                 shippingEnabled,
                 ...shippingDataMaybe,
+                deliveryRadiusKm,
               },
             };
 
@@ -202,6 +206,7 @@ const EditListingDeliveryPanel = props => {
                 shippingPriceInSubunitsOneItem,
                 shippingPriceInSubunitsAdditionalItems,
                 deliveryOptions,
+                deliveryRadiusKm,
               },
             });
             onSubmit(updateValues);

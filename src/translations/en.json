@@ -1499,5 +1499,8 @@
   "ManageListingsPage.buyNow": "Buy Now",
   "ManageListingsPage.buySearchQuotaLabel": "Buy a Search Page Feature Listing:",
   "ManageListingsPage.buyHomeQuotaLabel": "Buy a Homepage Feature Listing:",
-  "LocationFilter.distanceLabel": "Distance: {miles} mi"
+  "LocationFilter.distanceLabel": "Distance: {km} km",
+  "EditListingDeliveryForm.deliveryRadiusLabel": "Delivery radius (km)",
+  "EditListingDeliveryForm.deliveryRadiusPlaceholder": "e.g. 50",
+  "EditListingDeliveryForm.deliveryRadiusRequired": "Delivery radius is required."
 }
