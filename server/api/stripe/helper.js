@@ -69,7 +69,7 @@ const updateUserProfile = async (data, eventType) => {
 
       await iSdk.users.updateProfile({
         id: user.id,
-        protectedData: {
+        privateData: {
           subscriptionData: [...subscriptionData, { subscriptionId: subscription, created }],
         },
         metadata: {

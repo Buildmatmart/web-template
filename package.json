@@ -51,6 +51,7 @@
     "react-router-dom": "^5.3.4",
     "rehype-react": "^6.2.1",
     "rehype-sanitize": "^4.0.0",
+    "remark-gfm": "1",
     "remark-parse": "^9.0.0",
     "remark-rehype": "^8.1.0",
     "seedrandom": "^3.0.5",
