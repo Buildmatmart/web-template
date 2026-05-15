@@ -174,3 +174,7 @@ export const updateFeaturedListings = body => {
 export const createCheckoutSession = body => {
   return post('/api/stripe/create-checkout-session', body);
 };
+
+export const checkDeliveryRadius = body => {
+  return post('/api/check-delivery-radius', body);
+};

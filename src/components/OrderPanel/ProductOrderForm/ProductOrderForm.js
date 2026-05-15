@@ -1,15 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Form as FinalForm, FormSpy } from 'react-final-form';
 
 import { FormattedMessage, useIntl } from '../../../util/reactIntl';
 import { propTypes } from '../../../util/types';
-import { numberAtLeast, required } from '../../../util/validators';
+import {
+  numberAtLeast,
+  required,
+  autocompleteSearchRequired,
+  autocompletePlaceSelected,
+  composeValidators,
+} from '../../../util/validators';
 import { PURCHASE_PROCESS_NAME } from '../../../transactions/transaction';
+import { checkDeliveryRadius } from '../../../util/api';
 
 import {
   Form,
   FieldSelect,
   FieldTextInput,
+  FieldLocationAutocompleteInput,
   InlineTextButton,
   PrimaryButton,
   H3,
@@ -26,6 +34,8 @@ import css from './ProductOrderForm.module.css';
 // (stock is shown inside select element)
 // Note: input element could allow ordering bigger quantities
 const MAX_QUANTITY_FOR_DROPDOWN = 100;
+
+const identity = v => v;
 
 const handleFetchLineItems = ({
   quantity,
@@ -111,6 +121,11 @@ const DeliveryMethodMaybe = props => {
 
 const renderForm = formRenderProps => {
   const [mounted, setMounted] = useState(false);
+  const [deliveryRangeStatus, setDeliveryRangeStatus] = useState(null);
+  const [deliveryDistanceKm, setDeliveryDistanceKm] = useState(null);
+  const [locationTouched, setLocationTouched] = useState(false);
+  const prevLineItemValuesRef = useRef(null);
+
   const {
     // FormRenderProps from final-form
     handleSubmit,
@@ -135,7 +150,17 @@ const renderForm = formRenderProps => {
     marketplaceName,
     values,
     onMakeOffer,
+    deliveryRadiusKm,
+    sellerGeolocation,
   } = formRenderProps;
+
+  // Initialize ref synchronously on first render so handleOnChange never sees a null prev
+  if (prevLineItemValuesRef.current === null) {
+    prevLineItemValuesRef.current = {
+      quantity: values.quantity,
+      deliveryMethod: values.deliveryMethod,
+    };
+  }
 
   // Note: don't add custom logic before useEffect
   useEffect(() => {
@@ -156,10 +181,47 @@ const renderForm = formRenderProps => {
     }
   }, []);
 
+  const isShipping = values?.deliveryMethod === 'shipping';
+
+  // Reset location check when delivery method switches away from shipping
+  useEffect(() => {
+    if (!isShipping) {
+      setDeliveryRangeStatus(null);
+      setDeliveryDistanceKm(null);
+    }
+  }, [isShipping]);
+
+  const handleDeliveryLocationChange = value => {
+    setDeliveryRangeStatus(null);
+    setDeliveryDistanceKm(null);
+    setLocationTouched(false);
+
+    if (value?.selectedPlace?.origin && sellerGeolocation && deliveryRadiusKm) {
+      setDeliveryRangeStatus('checking');
+      const { origin: buyerOrigin } = value.selectedPlace;
+      checkDeliveryRadius({
+        buyerLat: buyerOrigin.lat,
+        buyerLng: buyerOrigin.lng,
+        sellerLat: sellerGeolocation.lat,
+        sellerLng: sellerGeolocation.lng,
+        deliveryRadiusKm,
+      })
+        .then(result => {
+          setDeliveryDistanceKm(result.distanceKm);
+          setDeliveryRangeStatus(result.withinRadius ? 'inRange' : 'outOfRange');
+        })
+        .catch(() => {
+          setDeliveryRangeStatus('error');
+        });
+    }
+  };
+
   // If form values change, update line-items for the order breakdown
   const handleOnChange = formValues => {
     const { quantity, deliveryMethod } = formValues.values;
-    if (mounted) {
+    const prev = prevLineItemValuesRef.current;
+    if (mounted && (quantity !== prev.quantity || deliveryMethod !== prev.deliveryMethod)) {
+      prevLineItemValuesRef.current = { quantity, deliveryMethod };
       handleFetchLineItems({
         quantity,
         deliveryMethod,
@@ -185,6 +247,9 @@ const renderForm = formRenderProps => {
       // Blur event will show validator message
       formApi.blur('deliveryMethod');
       formApi.focus('deliveryMethod');
+    } else if (isShipping && deliveryRadiusKm != null && !values?.shippingLocation?.selectedPlace) {
+      e.preventDefault();
+      setLocationTouched(true);
     } else {
       handleSubmit(e);
     }
@@ -218,7 +283,7 @@ const renderForm = formRenderProps => {
   const quantities = hasStock ? [...Array(selectableStock).keys()].map(i => i + 1) : [];
 
   const submitInProgress = fetchLineItemsInProgress;
-  const submitDisabled = !hasStock;
+  const submitDisabled = !hasStock || deliveryRangeStatus === 'outOfRange';
 
   return (
     <Form onSubmit={handleFormSubmit}>
@@ -259,6 +324,62 @@ const renderForm = formRenderProps => {
         formId={formId}
         intl={intl}
       />
+
+      {isShipping && deliveryRadiusKm != null ? (
+        <div>
+          <FieldLocationAutocompleteInput
+            rootClassName={css.locationAddress}
+            inputClassName={css.locationAutocompleteInput}
+            iconClassName={css.locationAutocompleteInputIcon}
+            predictionsClassName={css.predictionsRoot}
+            validClassName={css.validLocation}
+            name="shippingLocation"
+            id={`${formId}.shippingLocation`}
+            label={intl.formatMessage({ id: 'ProductOrderForm.shippingLocationLabel' })}
+            placeholder={intl.formatMessage({ id: 'ProductOrderForm.shippingLocationPlaceholder' })}
+            useDefaultPredictions={false}
+            format={identity}
+            valueFromForm={values.shippingLocation}
+            validate={composeValidators(
+              autocompleteSearchRequired(
+                intl.formatMessage({ id: 'ProductOrderForm.shippingLocationRequired' })
+              ),
+              autocompletePlaceSelected(
+                intl.formatMessage({ id: 'ProductOrderForm.shippingLocationNotRecognized' })
+              )
+            )}
+            hideErrorMessage={!locationTouched}
+            onChange={handleDeliveryLocationChange}
+          />
+          {deliveryRangeStatus === 'checking' ? (
+            <p className={css.deliveryChecking}>
+              {intl.formatMessage({ id: 'ProductOrderForm.checkingDelivery' })}
+            </p>
+          ) : locationTouched && !values?.shippingLocation?.selectedPlace ? (
+            <p className={css.deliveryError}>
+              {intl.formatMessage({ id: 'ProductOrderForm.shippingLocationRequired' })}
+            </p>
+          ) : deliveryRangeStatus === 'inRange' ? (
+            <p className={css.deliverySuccess}>
+              {intl.formatMessage(
+                { id: 'ProductOrderForm.withinDeliveryRange' },
+                { distance: deliveryDistanceKm }
+              )}
+            </p>
+          ) : deliveryRangeStatus === 'outOfRange' ? (
+            <p className={css.deliveryError}>
+              {intl.formatMessage(
+                { id: 'ProductOrderForm.outOfDeliveryRange' },
+                { deliveryRadius: deliveryRadiusKm, distance: deliveryDistanceKm }
+              )}
+            </p>
+          ) : deliveryRangeStatus === 'error' ? (
+            <p className={css.deliveryError}>
+              {intl.formatMessage({ id: 'ProductOrderForm.deliveryCheckError' })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {showBreakdown ? (
         <div className={css.breakdownWrapper}>

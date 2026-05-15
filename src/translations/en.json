@@ -1502,5 +1502,13 @@
   "LocationFilter.distanceLabel": "Distance: {km} km",
   "EditListingDeliveryForm.deliveryRadiusLabel": "Delivery radius (km)",
   "EditListingDeliveryForm.deliveryRadiusPlaceholder": "e.g. 50",
-  "EditListingDeliveryForm.deliveryRadiusRequired": "Delivery radius is required."
+  "EditListingDeliveryForm.deliveryRadiusRequired": "Delivery radius is required.",
+  "ProductOrderForm.shippingLocationLabel": "Your delivery location",
+  "ProductOrderForm.shippingLocationPlaceholder": "Enter your address",
+  "ProductOrderForm.shippingLocationRequired": "Please enter your delivery location.",
+  "ProductOrderForm.shippingLocationNotRecognized": "We didn't recognize this location. Please try another.",
+  "ProductOrderForm.checkingDelivery": "Checking if your location is within the delivery range…",
+  "ProductOrderForm.outOfDeliveryRange": "Sorry, you are outside the delivery radius of {deliveryRadius} km (your distance: {distance} km).",
+  "ProductOrderForm.deliveryCheckError": "Could not verify your delivery location. Please try again.",
+  "ProductOrderForm.withinDeliveryRange": "Great! Your location is within the delivery range ({distance} km away)."
 }

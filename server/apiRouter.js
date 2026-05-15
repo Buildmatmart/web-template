@@ -23,6 +23,7 @@ const { authenticateFacebook, authenticateFacebookCallback } = require('./api/au
 const { authenticateGoogle, authenticateGoogleCallback } = require('./api/auth/google');
 const stripeRouter = require('./api/stripe');
 const updateFeaturedListings = require('./api/update-featured-listings');
+const checkDeliveryRadius = require('./api/check-delivery-radius');
 
 const router = express.Router();
 
@@ -85,6 +86,7 @@ router.get('/auth/google', authenticateGoogle);
 router.get('/auth/google/callback', authenticateGoogleCallback);
 
 router.post('/update-featured-listings', updateFeaturedListings);
+router.post('/check-delivery-radius', checkDeliveryRadius);
 
 //stripe
 router.use('/stripe', stripeRouter);

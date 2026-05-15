@@ -95,3 +95,76 @@
     padding: 0;
   }
 }
+
+/* .deliveryLocationField {
+  padding: 0 24px;
+  margin-top: 24px;
+
+  @media (--viewportMedium) {
+    padding: 0;
+  }
+} */
+
+.deliveryChecking {
+  composes: marketplaceTinyFontStyles from global;
+  color: var(--colorGrey500);
+  margin-top: 6px;
+}
+
+.deliveryError {
+  composes: marketplaceTinyFontStyles from global;
+  color: var(--colorFail);
+  margin-top: 6px;
+}
+
+.deliverySuccess {
+  composes: marketplaceTinyFontStyles from global;
+  color: var(--colorSuccess);
+  margin-top: 6px;
+}
+
+.locationAddress {
+  flex-shrink: 0;
+  margin-top: 24px;
+
+  @media (max-width: 768px) {
+    margin-left: 24px;
+    margin-right: 24px;
+  }
+}
+
+.locationAutocompleteInput {
+}
+
+.locationAutocompleteInputIcon {
+  display: none;
+}
+
+.predictionsRoot {
+  position: absolute;
+  width: 100%;
+  top: 36px;
+  left: 0;
+  background-color: var(--marketplaceColor);
+  border-bottom-left-radius: var(--borderRadius);
+  border-bottom-right-radius: var(--borderRadius);
+  box-shadow: var(--boxShadowPopup);
+  z-index: calc(var(--zIndexPopup) + 1);
+
+  @media (--viewportMedium) {
+    top: 40px;
+  }
+}
+
+.validLocation {
+}
+
+.locationAddress,
+.building {
+  flex-shrink: 0;
+  margin-bottom: 24px;
+
+  @media (--viewportMedium) {
+    margin-bottom: 32px;
+  }
+}

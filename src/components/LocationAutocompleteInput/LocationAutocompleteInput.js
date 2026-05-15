@@ -27,10 +27,21 @@ const LocationAutocompleteInputImpl = loadable(() =>
  */
 const LocationAutocompleteInputComponent = props => {
   const { rootClassName, labelClassName, hideErrorMessage, ...restProps } = props;
-  const { input, label, meta, valueFromForm, ...otherProps } = restProps;
+  const { input, label, meta, valueFromForm, onChange, ...otherProps } = restProps;
 
   const value = typeof valueFromForm !== 'undefined' ? valueFromForm : input.value;
-  const locationAutocompleteProps = { label, meta, ...otherProps, input: { ...input, value } };
+  const handleChange = v => {
+    input.onChange(v);
+    if (onChange) {
+      onChange(v);
+    }
+  };
+  const locationAutocompleteProps = {
+    label,
+    meta,
+    ...otherProps,
+    input: { ...input, value, onChange: handleChange },
+  };
   const labelInfo = label ? (
     <label className={labelClassName} htmlFor={props.id}>
       {label}

@@ -170,8 +170,7 @@ const EditListingDeliveryPanel = props => {
             const address = location?.selectedPlace?.address || null;
             const origin = location?.selectedPlace?.origin || null;
 
-            const pickupDataMaybe =
-              pickupEnabled && address ? { location: { address, building } } : {};
+            const pickupDataMaybe = address ? { location: { address, building } } : {};
 
             const shippingDataMaybe =
               shippingEnabled && shippingPriceInSubunitsOneItem != null
