@@ -14,6 +14,30 @@ way to update this template, but currently, we follow a pattern:
 
 ## Upcoming version 2026-XX-XX
 
+- [fix] ContactDetailsPage.duck.js: fix an 'undefined' bug with saveEmailAndPhoneNumberThunk.
+  [#846](https://github.com/sharetribe/web-template/pull/846)
+- [add] Adds codebase support for saving referral ID to user private data on sign-up.
+  [#826](https://github.com/sharetribe/web-template/pull/826)
+
+## [v11.0.2] 2026-04-29
+
+- [fix] User fields: fix a bug with numberConfig validation (min and max values were missing).
+  [#840](https://github.com/sharetribe/web-template/pull/840)
+- [fix] Fix a layout bug with InboxSortBy component.
+  [#839](https://github.com/sharetribe/web-template/pull/839)
+- [fix] Fix a bug with UserCard showMore button.
+  [#838](https://github.com/sharetribe/web-template/pull/838)
+- [fix] Fixes a bug where listing metadata fields were not shown in the sort dropdown if the default
+  sorting config is missing [#835](https://github.com/sharetribe/web-template/pull/835)
+- [fix] Fix an error in a negotiation email template
+  [#837](https://github.com/sharetribe/web-template/pull/837)
+- [change] Update README.md to mention the NODE_ENV environment variable.
+  [#836](https://github.com/sharetribe/web-template/pull/836)
+- [add] Add currently available translations for DE, ES, FR.
+  [#834](https://github.com/sharetribe/web-template/pull/834)
+
+  [v11.0.2]: https://github.com/sharetribe/web-template/compare/v11.0.1...v11.0.2
+
 ## [v11.0.1] 2026-04-17
 
 - [fix] Fixes a bug where required short texts were not handled in EditListingWizard
