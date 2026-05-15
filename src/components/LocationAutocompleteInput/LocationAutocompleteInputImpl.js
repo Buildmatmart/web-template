@@ -363,6 +363,7 @@ class LocationAutocompleteInputImplementation extends Component {
     const config = this.props.config;
     const onChange = this.props.input.onChange;
     const typeLimit = this.props?.typeLimit;
+    const bbox = this.props?.bbox;
     this.setState({ fetchingPredictions: true });
 
     return this.getGeocoder()
@@ -370,7 +371,8 @@ class LocationAutocompleteInputImplementation extends Component {
         search,
         config.maps.search.countryLimit,
         config.localization.locale,
-        typeLimit
+        typeLimit,
+        bbox
       )
       .then(results => {
         const { search: currentSearch } = currentValue(this.props);

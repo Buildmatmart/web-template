@@ -96,7 +96,7 @@ class GeocoderMapbox {
    * and an array of predictions. The format of the predictions is
    * only relevant for the `getPlaceDetails` function below.
    */
-  getPlacePredictions(search, countryLimit, locale, typeLimit) {
+  getPlacePredictions(search, countryLimit, locale, typeLimit, bbox) {
     const limitCountriesMaybe = countryLimit ? { countries: countryLimit } : {};
 
     return this.getClient()
@@ -106,6 +106,7 @@ class GeocoderMapbox {
         ...limitCountriesMaybe,
         language: [locale],
         ...(typeLimit ? { types: typeLimit } : {}),
+        ...(bbox ? { bbox } : {}),
       })
       .send()
       .then(response => {
