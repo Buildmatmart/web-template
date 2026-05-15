@@ -96,7 +96,7 @@ class GeocoderMapbox {
    * and an array of predictions. The format of the predictions is
    * only relevant for the `getPlaceDetails` function below.
    */
-  getPlacePredictions(search, countryLimit, locale) {
+  getPlacePredictions(search, countryLimit, locale, typeLimit) {
     const limitCountriesMaybe = countryLimit ? { countries: countryLimit } : {};
 
     return this.getClient()
@@ -105,6 +105,7 @@ class GeocoderMapbox {
         limit: 5,
         ...limitCountriesMaybe,
         language: [locale],
+        ...(typeLimit ? { types: typeLimit } : {}),
       })
       .send()
       .then(response => {
@@ -141,7 +142,7 @@ class GeocoderMapbox {
    *
    * @return {Promise<util.propTypes.place>} a place object
    */
-  getPlaceDetails(prediction, currentLocationBoundsDistance) {
+  getPlaceDetails(prediction, currentLocationBoundsDistance, customBoundsDistance) {
     if (this.getPredictionId(prediction) === CURRENT_LOCATION_ID) {
       return userLocation().then(latlng => {
         return {
@@ -159,7 +160,9 @@ class GeocoderMapbox {
     return Promise.resolve({
       address: this.getPredictionAddress(prediction),
       origin: placeOrigin(prediction),
-      bounds: placeBounds(prediction),
+      bounds: customBoundsDistance
+        ? locationBounds(placeOrigin(prediction), customBoundsDistance)
+        : placeBounds(prediction),
     });
   }
 }

@@ -302,6 +302,7 @@ class LocationAutocompleteInputImplementation extends Component {
   selectPrediction(prediction) {
     const currentLocationBoundsDistance = this.props.config.maps?.search
       ?.currentLocationBoundsDistance;
+    const customBoundsDistance = this.props.boundsDistance;
     this.props.input.onChange({
       ...this.props.input,
       selectedPlace: null,
@@ -310,7 +311,7 @@ class LocationAutocompleteInputImplementation extends Component {
     this.setState({ fetchingPlaceDetails: true });
 
     this.getGeocoder()
-      .getPlaceDetails(prediction, currentLocationBoundsDistance)
+      .getPlaceDetails(prediction, currentLocationBoundsDistance, customBoundsDistance)
       .then(place => {
         if (!this._isMounted) {
           // Ignore if component already unmounted
@@ -361,10 +362,16 @@ class LocationAutocompleteInputImplementation extends Component {
   predict(search) {
     const config = this.props.config;
     const onChange = this.props.input.onChange;
+    const typeLimit = this.props?.typeLimit;
     this.setState({ fetchingPredictions: true });
 
     return this.getGeocoder()
-      .getPlacePredictions(search, config.maps.search.countryLimit, config.localization.locale)
+      .getPlacePredictions(
+        search,
+        config.maps.search.countryLimit,
+        config.localization.locale,
+        typeLimit
+      )
       .then(results => {
         const { search: currentSearch } = currentValue(this.props);
         this.setState({ fetchingPredictions: false });

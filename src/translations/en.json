@@ -1498,5 +1498,6 @@
   "InboxPage.default-purchase.offer-rejected.status": "Offer rejected",
   "ManageListingsPage.buyNow": "Buy Now",
   "ManageListingsPage.buySearchQuotaLabel": "Buy a Search Page Feature Listing:",
-  "ManageListingsPage.buyHomeQuotaLabel": "Buy a Homepage Feature Listing:"
+  "ManageListingsPage.buyHomeQuotaLabel": "Buy a Homepage Feature Listing:",
+  "LocationFilter.distanceLabel": "Distance: {miles} mi"
 }
