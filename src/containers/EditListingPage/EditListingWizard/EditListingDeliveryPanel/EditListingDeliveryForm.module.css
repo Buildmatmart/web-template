@@ -78,6 +78,46 @@
   }
 }
 
+.deliveryFeeRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  @media (--viewportMedium) {
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+}
+
+.deliveryFeeInput {
+  flex: 1;
+}
+
+.deliveryFeePer {
+  padding-bottom: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.noOfItemsInput {
+  flex: 1;
+}
+
+.deliveryFeeExample {
+  margin-top: -16px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: var(--colorGrey600);
+  line-height: 1.5;
+  white-space: pre-line;
+
+  @media (--viewportMedium) {
+    margin-top: -24px;
+    margin-bottom: 32px;
+  }
+}
+
 .submitButton {
   margin-top: auto;
   margin-bottom: 24px;

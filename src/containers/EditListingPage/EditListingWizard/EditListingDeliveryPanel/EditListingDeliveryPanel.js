@@ -153,6 +153,7 @@ const EditListingDeliveryPanel = props => {
       </H3>
       {priceCurrencyValid ? (
         <EditListingDeliveryForm
+          isStockMoreThan1={listing?.currentStock?.attributes?.quantity > 1}
           className={css.form}
           initialValues={state.initialValues}
           onSubmit={values => {
@@ -163,6 +164,7 @@ const EditListingDeliveryPanel = props => {
               shippingPriceInSubunitsAdditionalItems,
               deliveryOptions,
               deliveryRadiusKm,
+              noOfItems,
             } = values;
 
             const shippingEnabled = deliveryOptions.includes('shipping');
@@ -180,6 +182,7 @@ const EditListingDeliveryPanel = props => {
                     shippingPriceInSubunitsOneItem: shippingPriceInSubunitsOneItem.amount,
                     shippingPriceInSubunitsAdditionalItems:
                       shippingPriceInSubunitsAdditionalItems?.amount,
+                    noOfItems,
                   }
                 : {};
 
@@ -206,6 +209,7 @@ const EditListingDeliveryPanel = props => {
                 shippingPriceInSubunitsAdditionalItems,
                 deliveryOptions,
                 deliveryRadiusKm,
+                noOfItems,
               },
             });
             onSubmit(updateValues);
