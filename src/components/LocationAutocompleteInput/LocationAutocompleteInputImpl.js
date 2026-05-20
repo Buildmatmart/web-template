@@ -302,6 +302,7 @@ class LocationAutocompleteInputImplementation extends Component {
   selectPrediction(prediction) {
     const currentLocationBoundsDistance = this.props.config.maps?.search
       ?.currentLocationBoundsDistance;
+    const customBoundsDistance = this.props.boundsDistance;
     this.props.input.onChange({
       ...this.props.input,
       selectedPlace: null,
@@ -310,7 +311,7 @@ class LocationAutocompleteInputImplementation extends Component {
     this.setState({ fetchingPlaceDetails: true });
 
     this.getGeocoder()
-      .getPlaceDetails(prediction, currentLocationBoundsDistance)
+      .getPlaceDetails(prediction, currentLocationBoundsDistance, customBoundsDistance)
       .then(place => {
         if (!this._isMounted) {
           // Ignore if component already unmounted
@@ -325,7 +326,6 @@ class LocationAutocompleteInputImplementation extends Component {
       })
       .catch(e => {
         this.setState({ fetchingPlaceDetails: false });
-        // eslint-disable-next-line no-console
         console.error(e);
         this.props.input.onChange({
           ...this.props.input.value,
@@ -362,10 +362,18 @@ class LocationAutocompleteInputImplementation extends Component {
   predict(search) {
     const config = this.props.config;
     const onChange = this.props.input.onChange;
+    const typeLimit = this.props?.typeLimit;
+    const bbox = this.props?.bbox;
     this.setState({ fetchingPredictions: true });
 
     return this.getGeocoder()
-      .getPlacePredictions(search, config.maps.search.countryLimit, config.localization.locale)
+      .getPlacePredictions(
+        search,
+        config.maps.search.countryLimit,
+        config.localization.locale,
+        typeLimit,
+        bbox
+      )
       .then(results => {
         const { search: currentSearch } = currentValue(this.props);
         this.setState({ fetchingPredictions: false });
@@ -388,7 +396,6 @@ class LocationAutocompleteInputImplementation extends Component {
       })
       .catch(e => {
         this.setState({ fetchingPredictions: false });
-        // eslint-disable-next-line no-console
         console.error(e);
         const value = currentValue(this.props);
         onChange({

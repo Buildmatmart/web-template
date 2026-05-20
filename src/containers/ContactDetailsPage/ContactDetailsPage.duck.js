@@ -91,8 +91,8 @@ export const saveEmailAndPhoneNumberThunk = createAsyncThunk(
 
     return Promise.all(promises)
       .then(values => {
-        const saveEmailUser = values[0].payload;
-        const savePhoneNumberUser = values[1].payload;
+        const saveEmailUser = values[0];
+        const savePhoneNumberUser = values[1];
 
         const protectedData = savePhoneNumberUser.attributes.profile.protectedData;
         const phoneNumberMergeSource = { attributes: { profile: { protectedData } } };
@@ -178,7 +178,7 @@ const contactDetailsSlice = createSlice({
         state.resetPasswordInProgress = false;
       })
       .addCase(resetPasswordThunk.rejected, (state, action) => {
-        console.error(action.payload); // eslint-disable-line no-console
+        console.error(action.payload);
         state.resetPasswordInProgress = false;
         state.resetPasswordError = action.payload;
       })

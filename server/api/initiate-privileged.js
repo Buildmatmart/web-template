@@ -8,10 +8,12 @@ const {
   serialize,
   fetchCommission,
 } = require('../api-util/sdk');
+const { applyCommissionRate } = require('../api-util/commission');
+const { denormalisedResponseEntities } = require('../api-util/data');
 
 const { Money } = sharetribeSdk.types;
 
-const listingPromise = (sdk, id) => sdk.listings.show({ id });
+const listingPromise = (sdk, id) => sdk.listings.show({ id, include: ['author'] });
 
 const getFullOrderData = (orderData, bodyParams, currency) => {
   const { offerInSubunits } = orderData || {};
@@ -57,12 +59,16 @@ module.exports = (req, res) => {
 
   Promise.all([listingPromise(sdk, bodyParams?.params?.listingId), fetchCommission(sdk)])
     .then(([showListingResponse, fetchAssetsResponse]) => {
-      const listing = showListingResponse.data.data;
+      const listing = denormalisedResponseEntities(showListingResponse)[0];
       const commissionAsset = fetchAssetsResponse.data.data[0];
 
+      const authorAttributes = listing.author?.attributes || {};
+
       const currency = listing.attributes.price?.currency || orderData.currency;
-      const { providerCommission, customerCommission } =
+      let { providerCommission, customerCommission } =
         commissionAsset?.type === 'jsonAsset' ? commissionAsset.attributes.data : {};
+
+      providerCommission = applyCommissionRate(providerCommission, authorAttributes);
 
       lineItems = transactionLineItems(
         listing,

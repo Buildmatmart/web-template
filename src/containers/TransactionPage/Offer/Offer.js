@@ -28,13 +28,14 @@ const Offer = props => {
     transactionFieldsComponent,
   } = props;
 
-  if (!isNegotiationProcess) {
+  const offers = transaction?.attributes?.metadata?.offers;
+
+  if (!isNegotiationProcess && !offers?.length) {
     return null;
   }
 
   const isProvider = transactionRole === 'provider';
   const protectedData = transaction?.attributes?.protectedData;
-  const offers = transaction?.attributes?.metadata?.offers;
   const providerDefaultMessage = !isProviderBanned
     ? protectedData?.providerDefaultMessage
     : intl.formatMessage({ id: 'TransactionPage.messageSenderBanned' });
@@ -58,7 +59,8 @@ const Offer = props => {
   // If the customer has made a counter offer,
   // we show the previous offer (that was in pending-offer state) as a quote
   const isCustomerCounterOffer =
-    transaction?.attributes?.lastTransition === process.transitions.CUSTOMER_MAKE_COUNTER_OFFER;
+    transaction?.attributes?.lastTransition === process.transitions.CUSTOMER_MAKE_COUNTER_OFFER ||
+    transaction?.attributes?.lastTransition === process.transitions.CUSTOMER_COUNTER_OFFER;
   const previousOfferInSubunits = offers?.at(-2)?.offerInSubunits;
   const currency = transaction?.attributes?.payinTotal?.currency;
 

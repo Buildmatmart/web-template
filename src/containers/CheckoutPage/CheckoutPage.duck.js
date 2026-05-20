@@ -19,12 +19,15 @@ const initiateOrderPayloadCreator = (
   // If we already have a transaction ID, we should transition, not initiate.
   const isTransition = !!transactionId;
 
-  const { deliveryMethod, quantity, bookingDates, ...otherOrderParams } = orderParams;
+  const { deliveryMethod, quantity, bookingDates, offer, ...otherOrderParams } = orderParams;
   const quantityMaybe = quantity ? { stockReservationQuantity: quantity } : {};
   const bookingParamsMaybe = bookingDates || {};
 
   // Parameters only for client app's server
-  const orderData = deliveryMethod ? { deliveryMethod } : {};
+  const orderData = {
+    ...(deliveryMethod ? { deliveryMethod } : {}),
+    ...(offer ? { offer } : {}),
+  };
 
   // Parameters for Marketplace API
   const transitionParams = {
@@ -264,6 +267,7 @@ const speculateTransactionPayloadCreator = (
     priceVariantName,
     quantity,
     bookingDates,
+    offer,
     ...otherOrderParams
   } = orderParams;
   const quantityMaybe = quantity ? { stockReservationQuantity: quantity } : {};
@@ -273,6 +277,7 @@ const speculateTransactionPayloadCreator = (
   const orderData = {
     ...(deliveryMethod ? { deliveryMethod } : {}),
     ...(priceVariantName ? { priceVariantName } : {}),
+    ...(offer ? { offer } : {}),
   };
 
   // Parameters for Marketplace API
@@ -433,7 +438,7 @@ const checkoutPageSlice = createSlice({
         state.transaction = action.payload;
       })
       .addCase(initiateOrderThunk.rejected, (state, action) => {
-        console.error(action.payload); // eslint-disable-line no-console
+        console.error(action.payload);
         state.initiateOrderError = action.payload;
       })
       // Confirm Payment cases
@@ -444,7 +449,7 @@ const checkoutPageSlice = createSlice({
         // Payment confirmed successfully, no state change needed
       })
       .addCase(confirmPaymentThunk.rejected, (state, action) => {
-        console.error(action.payload); // eslint-disable-line no-console
+        console.error(action.payload);
         state.confirmPaymentError = action.payload;
       })
       // Speculate Transaction cases
@@ -464,7 +469,7 @@ const checkoutPageSlice = createSlice({
           Math.abs(lastTransitionedAt?.getTime() - localTime.getTime()) < minute;
       })
       .addCase(speculateTransactionThunk.rejected, (state, action) => {
-        console.error(action.payload); // eslint-disable-line no-console
+        console.error(action.payload);
         state.speculateTransactionInProgress = false;
         state.speculateTransactionError = action.payload;
       })
@@ -477,7 +482,7 @@ const checkoutPageSlice = createSlice({
         state.stripeCustomerFetched = true;
       })
       .addCase(stripeCustomerThunk.rejected, (state, action) => {
-        console.error(action.payload); // eslint-disable-line no-console
+        console.error(action.payload);
         state.stripeCustomerFetchError = action.payload;
       })
       // Initiate Inquiry cases

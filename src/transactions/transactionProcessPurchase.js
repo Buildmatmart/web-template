@@ -24,6 +24,15 @@ export const transitions = {
   INQUIRE: 'transition/inquire',
   REQUEST_PAYMENT_AFTER_INQUIRY: 'transition/request-payment-after-inquiry',
 
+  // Offer/negotiation flow
+  MAKE_OFFER: 'transition/make-offer',
+  PROVIDER_REJECT_OFFER: 'transition/provider-reject-offer',
+  PROVIDER_COUNTER_OFFER: 'transition/provider-counter-offer',
+  CUSTOMER_COUNTER_OFFER: 'transition/customer-counter-offer',
+  CUSTOMER_ACCEPT_OFFER: 'transition/customer-accept-offer',
+  PROVIDER_ACCEPT_OFFER: 'transition/provider-accept-offer',
+  REQUEST_PAYMENT_AFTER_NEGOTIATION: 'transition/request-payment-after-negotiation',
+
   // Stripe SDK might need to ask 3D security from customer, in a separate front-end step.
   // Therefore we need to make another transition to Marketplace API,
   // to tell that the payment is confirmed.
@@ -95,6 +104,10 @@ export const transitions = {
 export const states = {
   INITIAL: 'initial',
   INQUIRY: 'inquiry',
+  OFFER_PENDING: 'offer-pending',
+  OFFER_REJECTED: 'offer-rejected',
+  PROVIDER_OFFER_PENDING: 'provider-offer-pending',
+  OFFER_ACCEPTED: 'offer-accepted',
   PENDING_PAYMENT: 'pending-payment',
   PAYMENT_EXPIRED: 'payment-expired',
   PURCHASED: 'purchased',
@@ -132,11 +145,35 @@ export const graph = {
       on: {
         [transitions.INQUIRE]: states.INQUIRY,
         [transitions.REQUEST_PAYMENT]: states.PENDING_PAYMENT,
+        [transitions.MAKE_OFFER]: states.OFFER_PENDING,
       },
     },
     [states.INQUIRY]: {
       on: {
         [transitions.REQUEST_PAYMENT_AFTER_INQUIRY]: states.PENDING_PAYMENT,
+      },
+    },
+
+    [states.OFFER_PENDING]: {
+      on: {
+        [transitions.PROVIDER_REJECT_OFFER]: states.OFFER_REJECTED,
+        [transitions.PROVIDER_COUNTER_OFFER]: states.PROVIDER_OFFER_PENDING,
+        [transitions.PROVIDER_ACCEPT_OFFER]: states.OFFER_ACCEPTED,
+      },
+    },
+
+    [states.OFFER_REJECTED]: {},
+
+    [states.PROVIDER_OFFER_PENDING]: {
+      on: {
+        [transitions.CUSTOMER_COUNTER_OFFER]: states.OFFER_PENDING,
+        [transitions.CUSTOMER_ACCEPT_OFFER]: states.OFFER_ACCEPTED,
+      },
+    },
+
+    [states.OFFER_ACCEPTED]: {
+      on: {
+        [transitions.REQUEST_PAYMENT_AFTER_NEGOTIATION]: states.PENDING_PAYMENT,
       },
     },
 
@@ -207,11 +244,48 @@ export const graph = {
   },
 };
 
+// Transitions that carry a price offer (stored in protectedData.offers)
+const offerTransitions = [
+  transitions.MAKE_OFFER,
+  transitions.PROVIDER_COUNTER_OFFER,
+  transitions.CUSTOMER_COUNTER_OFFER,
+];
+
+/**
+ * Returns a new array of transitions with the offerInSubunits property added to the transitions
+ * that have a matching offer entry in protectedData.offers.
+ *
+ * @param {Array} transitions - The transaction's past transitions
+ * @param {Array} offers - The offers array from protectedData (each entry: { offerInSubunits, by, transition })
+ * @returns {Array}
+ */
+export const getTransitionsWithMatchingOffers = (transitions, offers) => {
+  if (!Array.isArray(offers) || offers.length === 0) {
+    return transitions;
+  }
+
+  let offerIndex = 0;
+  return transitions.map(t => {
+    if (offerTransitions.includes(t.transition) && offerIndex < offers.length) {
+      const offer = offers[offerIndex];
+      offerIndex++;
+      return { ...t, offerInSubunits: offer.offerInSubunits };
+    }
+    return t;
+  });
+};
+
 // Check if a transition is the kind that should be rendered
 // when showing transition history (e.g. ActivityFeed)
 // The first transition and most of the expiration transitions made by system are not relevant
 export const isRelevantPastTransition = transition => {
   return [
+    transitions.MAKE_OFFER,
+    transitions.PROVIDER_REJECT_OFFER,
+    transitions.PROVIDER_COUNTER_OFFER,
+    transitions.CUSTOMER_COUNTER_OFFER,
+    transitions.CUSTOMER_ACCEPT_OFFER,
+    transitions.PROVIDER_ACCEPT_OFFER,
     transitions.CONFIRM_PAYMENT,
     transitions.AUTO_CANCEL,
     transitions.CANCEL,
@@ -228,6 +302,7 @@ export const isRelevantPastTransition = transition => {
     transitions.REVIEW_2_BY_PROVIDER,
   ].includes(transition);
 };
+
 export const isCustomerReview = transition => {
   return [transitions.REVIEW_1_BY_CUSTOMER, transitions.REVIEW_2_BY_CUSTOMER].includes(transition);
 };
@@ -243,9 +318,15 @@ export const isProviderReview = transition => {
 // should go through the local API endpoints, or if using JS SDK is
 // enough.
 export const isPrivileged = transition => {
-  return [transitions.REQUEST_PAYMENT, transitions.REQUEST_PAYMENT_AFTER_INQUIRY].includes(
-    transition
-  );
+  return [
+    transitions.REQUEST_PAYMENT,
+    transitions.REQUEST_PAYMENT_AFTER_INQUIRY,
+    transitions.REQUEST_PAYMENT_AFTER_NEGOTIATION,
+
+    transitions.MAKE_OFFER,
+    transitions.PROVIDER_COUNTER_OFFER,
+    transitions.CUSTOMER_COUNTER_OFFER,
+  ].includes(transition);
 };
 
 // Check when transaction is completed (item is received and review notifications sent)
@@ -276,4 +357,4 @@ export const isRefunded = transition => {
   return txRefundedTransitions.includes(transition);
 };
 
-export const statesNeedingProviderAttention = [states.PURCHASED];
+export const statesNeedingProviderAttention = [states.PURCHASED, states.OFFER_PENDING];

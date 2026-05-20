@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { compose } from 'redux';
-import { connect } from 'react-redux';
+import { connect, useDispatch } from 'react-redux';
 
 import { useRouteConfiguration } from '../../context/routeConfigurationContext';
 import { useConfiguration } from '../../context/configurationContext';
@@ -21,6 +21,7 @@ import {
   LayoutSingleColumn,
   NamedLink,
   Modal,
+  PrimaryButtonInline,
 } from '../../components';
 
 import TopbarContainer from '../../containers/TopbarContainer/TopbarContainer';
@@ -33,9 +34,26 @@ import {
   openListing,
   getOwnListingsById,
   discardDraft,
+  updateOwnListing,
 } from './ManageListingsPage.duck';
 import css from './ManageListingsPage.module.css';
 import DiscardDraftModal from './DiscardDraftModal/DiscardDraftModal';
+import { updateFeaturedListings, createCheckoutSession } from '../../util/api';
+import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
+import { setCurrentUser } from '../../ducks/user.duck';
+import { denormalisedResponseEntities } from '../../util/data';
+
+const SEARCH_FEATURED_LIMITS = {
+  pro: 6,
+  elite: 15,
+  business: 30,
+};
+
+const HOME_FEATURED_LIMITS = {
+  pro: 0,
+  elite: 2,
+  business: 5,
+};
 
 const Heading = props => {
   const { listingsAreLoaded, pagination } = props;
@@ -106,10 +124,13 @@ export const ManageListingsPageComponent = props => {
   const [listingMenuOpen, setListingMenuOpen] = useState(null);
   const [discardDraftModalOpen, setDiscardDraftModalOpen] = useState(null);
   const [discardDraftModalId, setDiscardDraftModalId] = useState(null);
+  const [featuredListingId, setFeaturedListingId] = useState(null);
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
   const history = useHistory();
   const routeConfiguration = useRouteConfiguration();
   const config = useConfiguration();
   const intl = useIntl();
+  const dispatch = useDispatch();
 
   const {
     currentUser,
@@ -168,6 +189,44 @@ export const ManageListingsPageComponent = props => {
     setDiscardDraftModalId(null);
   };
 
+  const handleBuyQuota = async type => {
+    try {
+      setCheckoutLoading(type);
+      const { url } = await createCheckoutSession({ type });
+      if (url) window.location.href = url;
+    } catch (e) {
+      console.error('Checkout session error', e);
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleFeatureListing = async (listingId, status, location) => {
+    try {
+      setFeaturedListingId(listingId);
+      const res = await updateFeaturedListings({
+        listingId: listingId.uuid,
+        active: status,
+        location: location,
+      });
+      const { user, listing } = res.data;
+
+      if (!!user) {
+        user.data.data.type = 'currentUser';
+        dispatch(setCurrentUser(denormalisedResponseEntities(user)[0]));
+      }
+
+      if (!!listing) {
+        listing.data.data.type = 'ownListing';
+        dispatch(updateOwnListing(listing.data.data));
+      }
+    } catch (error) {
+      window.alert(error?.statusText || 'Error updating featured');
+    } finally {
+      setFeaturedListingId(null);
+    }
+  };
+
   const hasPaginationInfo = !!pagination && pagination.totalItems != null;
   const listingsAreLoaded = !queryInProgress && hasPaginationInfo;
 
@@ -201,6 +260,29 @@ export const ManageListingsPageComponent = props => {
 
   const showManageListingsLink = showCreateListingLinkForUser(config, currentUser);
 
+  const {
+    subscriptionPlan,
+    searchFeaturedCount = 0,
+    homeFeaturedCount = 0,
+    searchFeaturedQuota = [],
+    homeFeaturedQuota = [],
+  } = currentUser?.attributes?.profile?.metadata || {};
+
+  const activeSeachFeaturedQuota = searchFeaturedQuota.filter(q => ['active'].includes(q.status))
+    .length;
+  const activeHomeFeaturedQuota = homeFeaturedQuota.filter(q => ['active'].includes(q.status))
+    .length;
+
+  const totalSearchFeaturedQuota =
+    (SEARCH_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeSeachFeaturedQuota;
+  const totalHomeFeaturedQuota =
+    (HOME_FEATURED_LIMITS[subscriptionPlan] ?? 0) + activeHomeFeaturedQuota;
+
+  const showSearchFeatured =
+    !!SEARCH_FEATURED_LIMITS[subscriptionPlan] || totalSearchFeaturedQuota > 0;
+
+  const showHomeFeatured = !!HOME_FEATURED_LIMITS[subscriptionPlan] || totalHomeFeaturedQuota > 0;
+
   return (
     <Page
       title={intl.formatMessage({ id: 'ManageListingsPage.title' })}
@@ -222,27 +304,119 @@ export const ManageListingsPageComponent = props => {
         {queryListingsError ? queryError : null}
 
         <div className={css.listingPanel}>
-          <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
-
-          <div className={css.listingCards}>
-            {listings.map(l => (
-              <ManageListingCard
-                className={css.listingCard}
-                key={l.id.uuid}
-                listing={l}
-                isMenuOpen={!!listingMenuOpen && listingMenuOpen.id.uuid === l.id.uuid}
-                actionsInProgressListingId={openingListing || closingListing || discardingDraft}
-                onToggleMenu={onToggleMenu}
-                onCloseListing={onCloseListing}
-                onOpenListing={handleOpenListing}
-                onDiscardDraft={openDiscardDraftModal}
-                hasOpeningError={openingErrorListingId.uuid === l.id.uuid}
-                hasClosingError={closingErrorListingId.uuid === l.id.uuid}
-                hasDiscardingError={discardingErrorListingId.uuid === l.id.uuid}
-                renderSizes={renderSizes}
-              />
-            ))}
+          <div className={css.headingRow}>
+            <Heading listingsAreLoaded={listingsAreLoaded} pagination={pagination} />
           </div>
+
+          {!!listings?.length && (
+            <div className={css.quotaInfo}>
+              <div className={css.quotaDetails}>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.yourPlan"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      plan: subscriptionPlan
+                        ? subscriptionPlan.charAt(0).toUpperCase() + subscriptionPlan.slice(1)
+                        : 'Free',
+                    }}
+                  />
+                </p>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.searchFeaturedQuota"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      used: searchFeaturedCount,
+                      total: totalSearchFeaturedQuota,
+                    }}
+                  />
+                </p>
+                <p className={css.quotaItem}>
+                  <FormattedMessage
+                    id="ManageListingsPage.homeFeaturedQuota"
+                    values={{
+                      b: chunks => <strong>{chunks}</strong>,
+                      used: homeFeaturedCount,
+                      total: totalHomeFeaturedQuota,
+                    }}
+                  />
+                </p>
+              </div>
+
+              <div className={css.quotaActions}>
+                <div className={css.upgradeRow}>
+                  <p className={css.upgradeMessage}>
+                    <FormattedMessage id="ManageListingsPage.upgradeMessage" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    onClick={() =>
+                      history.push(
+                        pathByRouteName('CMSPage', routeConfiguration, { pageId: 'pricing' })
+                      )
+                    }
+                  >
+                    <FormattedMessage id="ManageListingsPage.viewPlans" />
+                  </PrimaryButtonInline>
+                </div>
+                <div className={css.actionRow}>
+                  <p className={css.actionLabel}>
+                    <FormattedMessage id="ManageListingsPage.buySearchQuotaLabel" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    inProgress={checkoutLoading === 'search-featured'}
+                    disabled={checkoutLoading !== null}
+                    onClick={() => handleBuyQuota('search-featured')}
+                  >
+                    <FormattedMessage id="ManageListingsPage.buyNow" defaultMessage="Buy Now" />
+                  </PrimaryButtonInline>
+                </div>
+                <div className={css.actionRow}>
+                  <p className={css.actionLabel}>
+                    <FormattedMessage id="ManageListingsPage.buyHomeQuotaLabel" />
+                  </p>
+                  <PrimaryButtonInline
+                    className={css.quotaActionButton}
+                    inProgress={checkoutLoading === 'home-featured'}
+                    disabled={checkoutLoading !== null}
+                    onClick={() => handleBuyQuota('home-featured')}
+                  >
+                    <FormattedMessage id="ManageListingsPage.buyNow" defaultMessage="Buy Now" />
+                  </PrimaryButtonInline>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* here */}
+
+          <ul className={css.listingCards}>
+            {listings.map(l => (
+              <li key={l.id.uuid} className={css.listingCard}>
+                <ManageListingCard
+                  listing={l}
+                  isMenuOpen={!!listingMenuOpen && listingMenuOpen.id.uuid === l.id.uuid}
+                  actionsInProgressListingId={
+                    openingListing || closingListing || discardingDraft || featuredListingId
+                  }
+                  onToggleMenu={onToggleMenu}
+                  onCloseListing={onCloseListing}
+                  onOpenListing={handleOpenListing}
+                  onDiscardDraft={openDiscardDraftModal}
+                  hasOpeningError={openingErrorListingId.uuid === l.id.uuid}
+                  hasClosingError={closingErrorListingId.uuid === l.id.uuid}
+                  hasDiscardingError={discardingErrorListingId.uuid === l.id.uuid}
+                  renderSizes={renderSizes}
+                  showSearchFeatured={showSearchFeatured}
+                  showHomeFeatured={showHomeFeatured}
+                  onFeatureListing={handleFeatureListing}
+                  onUnfeatureListing={handleFeatureListing}
+                />
+              </li>
+            ))}
+          </ul>
           {onManageDisableScrolling && discardDraftModalOpen ? (
             <DiscardDraftModal
               id="ManageListingsPage"
@@ -283,6 +457,7 @@ const mapStateToProps = state => {
     discardingDraftError,
   } = state.ManageListingsPage;
   const listings = getOwnListingsById(state, currentPageResultIds);
+
   return {
     currentUser,
     currentPageResultIds,
@@ -309,11 +484,8 @@ const mapDispatchToProps = dispatch => ({
     dispatch(manageDisableScrolling(componentId, disableScrolling)),
 });
 
-const ManageListingsPage = compose(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
-)(ManageListingsPageComponent);
+const ManageListingsPage = compose(connect(mapStateToProps, mapDispatchToProps))(
+  ManageListingsPageComponent
+);
 
 export default ManageListingsPage;

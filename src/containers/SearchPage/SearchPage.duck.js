@@ -13,6 +13,7 @@ import {
 import { constructQueryParamName, isOriginInUse } from '../../util/search';
 import { hasPermissionToViewData, isUserAuthorized } from '../../util/userHelpers';
 import { parse } from '../../util/urlHelpers';
+import { getReferralParams } from '../../util/webStorageHelpers';
 
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
 
@@ -123,7 +124,11 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
    * @returns {Object} The prepared parameter object.
    */
   const prepareIntegerRangeParam = (paramName, params) => {
-    const integerRangeConfig = config.listing.listingFields?.find(f => f.schemaType === 'long');
+    const integerRangeConfig = config.listing.listingFields?.find(f => {
+      const isInteger = f.schemaType === 'long';
+      const isCorrectExtendedDataKey = constructQueryParamName(f.key, f.scope) === paramName;
+      return isInteger && isCorrectExtendedDataKey;
+    });
     const { key, scope } = integerRangeConfig || {};
     const integerParamPrefix = constructQueryParamName(key, scope);
     return paramName.startsWith(integerParamPrefix)
@@ -247,7 +252,7 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
 
     // User-specified sort takes priority
     if (sortParam !== undefined && sortParam !== sortConfig.relevanceKey) {
-      return { sort: sortParam };
+      return { sort: `meta_searchFeaturedScore,${sortParam}` };
     }
 
     // No sort parameter needed when keyword search is used or sort config is inactive
@@ -256,7 +261,7 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
     }
 
     // Fall back to default sort
-    return { sort: defaultSort };
+    return { sort: `meta_searchFeaturedScore,${defaultSort}` };
   };
 
   const {
@@ -278,6 +283,17 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
   const seatsMaybe = seatsSearchParams(seats, datesMaybe);
   const sortMaybe = sortSearchParams(sort, searchParams?.keywords !== undefined);
 
+  // Filter out potential referral data parameters so that they are not included in the API query
+  const { userTypes = [] } = config.user;
+  const validReferralSources = getReferralParams(userTypes);
+  const apiParamsRaw = Object.fromEntries(
+    Object.entries(restOfParams).filter(entry => {
+      const [key, value] = entry;
+
+      return !validReferralSources.includes(key);
+    })
+  );
+
   const params = {
     // The params that are related to listing fields and categories are prepared here.
     // We add handler functions that check category and integer range configurations.
@@ -286,7 +302,7 @@ const searchListingsPayloadCreator = ({ searchParams, config }, thunkAPI) => {
     // - With integer range params, we prepare the property for API.
     //   I.e. the range end must be exclusive. E.g. 1000,2000 -> 1000,2001
     // Note: invalid independent search params are still passed through
-    ...prepareAPIParams(restOfParams, [prepareCategoryParams, prepareIntegerRangeParam]),
+    ...prepareAPIParams(apiParamsRaw, [prepareCategoryParams, prepareIntegerRangeParam]),
     // If the search page variant is of type /s/:listingType, this sets the pub_listingType
     // query parameter to the value of the listing type path parameter. The ordering matters here,
     // since this value overrides any possible pub_listingType value coming from query parameters
@@ -362,7 +378,6 @@ const searchPageSlice = createSlice({
         state.searchInProgress = false;
       })
       .addCase(searchListings.rejected, (state, action) => {
-        // eslint-disable-next-line no-console
         console.error(action.payload);
         state.searchInProgress = false;
         state.searchListingsError = action.payload;
@@ -424,6 +439,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
         'price',
         'deleted',
         'state',
+        'metadata',
         'publicData.listingType',
         'publicData.transactionProcessAlias',
         'publicData.unitType',

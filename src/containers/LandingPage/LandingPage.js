@@ -41,7 +41,6 @@ LandingPageComponent.propTypes = {
 const mapStateToProps = state => {
   const { pageAssetsData, inProgress, error } = state.hostedAssets || {};
   const featuredListingData = state.featuredListings || {};
-
   const getListingEntitiesById = listingIds => getListingsById(state, listingIds);
 
   return { pageAssetsData, featuredListingData, getListingEntitiesById, inProgress, error };
@@ -58,11 +57,6 @@ const mapDispatchToProps = dispatch => ({
 // lifecycle hook.
 //
 // See: https://github.com/ReactTraining/react-router/issues/4671
-const LandingPage = compose(
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
-)(LandingPageComponent);
+const LandingPage = compose(connect(mapStateToProps, mapDispatchToProps))(LandingPageComponent);
 
 export default LandingPage;

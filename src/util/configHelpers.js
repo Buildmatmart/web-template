@@ -1,6 +1,7 @@
 import { subUnitDivisors } from '../config/settingsCurrency';
 import { getSupportedProcessesInfo, isBookingProcessAlias } from '../transactions/transaction';
 import { sanitizeText } from './sanitize';
+import { EXTENDED_DATA_SCHEMA_TYPES } from './types';
 
 const isTestEnvironment = process.env.NODE_ENV === 'test';
 // Generic helpers for validating config values
@@ -694,7 +695,16 @@ const validShowConfig = config => {
 };
 
 // numberConfig is passed along with listing fields that use the schema type `long`
-const validNumberConfig = config => {
+const validNumberConfig = (config, schemaType) => {
+  const shouldHaveNumberConfig = schemaType === 'long';
+
+  if (!shouldHaveNumberConfig) {
+    // A field might have an obsolete numberConfig that no longer
+    // matches the field's schema type. If that is the case, return
+    // a valid result and remove the obsolete number config
+    return [true, {}];
+  }
+
   const { minimum, maximum } = config;
   const integerConfig = { minimum, maximum, step: 1 };
 
@@ -831,7 +841,6 @@ const validUserSaveConfig = config => {
 const validListingFields = (listingFields, listingTypesInUse, categoriesInUse) => {
   const keys = listingFields.map(d => d.key);
   const scopeOptions = ['public', 'private', 'metadata'];
-  const validSchemaTypes = ['enum', 'multi-enum', 'text', 'long', 'boolean', 'youtubeVideoUrl'];
 
   return listingFields.reduce((acc, data) => {
     const schemaType = data.schemaType;
@@ -847,7 +856,7 @@ const validListingFields = (listingFields, listingTypesInUse, categoriesInUse) =
             : name === 'scope'
             ? validEnumString('scope', value, scopeOptions, 'public')
             : name === 'numberConfig'
-            ? validNumberConfig(value)
+            ? validNumberConfig(value, schemaType)
             : name === 'includeForListingTypes'
             ? validListingTypesForBuiltInSetup(value, listingTypesInUse)
             : name === 'listingTypeConfig'
@@ -855,7 +864,7 @@ const validListingFields = (listingFields, listingTypesInUse, categoriesInUse) =
             : name === 'categoryConfig'
             ? validListingTypesForCategoryConfig(value, categoriesInUse)
             : name === 'schemaType'
-            ? validEnumString('schemaType', value, validSchemaTypes)
+            ? validEnumString('schemaType', value, EXTENDED_DATA_SCHEMA_TYPES)
             : name === 'enumOptions'
             ? validSchemaOptions(value, schemaType)
             : name === 'filterConfig'
@@ -893,7 +902,6 @@ const validListingFields = (listingFields, listingTypesInUse, categoriesInUse) =
 const validTransactionFields = transactionFields => {
   const keys = transactionFields.map(d => d.key);
   const scopeOptions = ['protected'];
-  const validSchemaTypes = ['enum', 'multi-enum', 'text', 'long', 'boolean', 'youtubeVideoUrl'];
 
   return transactionFields.reduce((acc, data) => {
     const schemaType = data.schemaType;
@@ -909,9 +917,9 @@ const validTransactionFields = transactionFields => {
             : name === 'scope'
             ? validEnumString('scope', value, scopeOptions, 'protected')
             : name === 'numberConfig'
-            ? validNumberConfig(value)
+            ? validNumberConfig(value, schemaType)
             : name === 'schemaType'
-            ? validEnumString('schemaType', value, validSchemaTypes)
+            ? validEnumString('schemaType', value, EXTENDED_DATA_SCHEMA_TYPES)
             : name === 'enumOptions'
             ? validSchemaOptions(value, schemaType)
             : name === 'filterConfig'
@@ -955,7 +963,6 @@ const validUserTypes = userTypes => {
 const validUserFields = (userFields, userTypesInUse) => {
   const keys = userFields.map(d => d.key);
   const scopeOptions = ['public', 'private', 'protected', 'metadata'];
-  const validSchemaTypes = ['enum', 'multi-enum', 'text', 'long', 'boolean', 'youtubeVideoUrl'];
 
   return userFields.reduce((acc, data) => {
     const schemaType = data.schemaType;
@@ -973,9 +980,11 @@ const validUserFields = (userFields, userTypesInUse) => {
             : name === 'scope'
             ? validEnumString('scope', value, scopeOptions, 'public')
             : name === 'schemaType'
-            ? validEnumString('schemaType', value, validSchemaTypes)
+            ? validEnumString('schemaType', value, EXTENDED_DATA_SCHEMA_TYPES)
             : name === 'enumOptions'
             ? validSchemaOptions(value, schemaType)
+            : name === 'numberConfig'
+            ? validNumberConfig(value, schemaType)
             : name === 'showConfig'
             ? validUserShowConfig(value)
             : name === 'userTypeConfig'
@@ -1538,14 +1547,6 @@ const validSortConfig = config => {
 };
 
 const mergeSortConfig = (hostedSortConfig, defaultSortConfig, omitRelevance, listingFields) => {
-  if (hostedSortConfig == null) {
-    return {
-      ...defaultSortConfig,
-      // Disable SortBy component if there are less than 2 options
-      active: defaultSortConfig.options.length > 1,
-    };
-  }
-
   // Flag filters to remove if the default sorting option is toggled off in Console
   const removeByKey = {
     createdAt: !hostedSortConfig?.newest,
@@ -1560,7 +1561,12 @@ const mergeSortConfig = (hostedSortConfig, defaultSortConfig, omitRelevance, lis
   // and returns primaryOptions and secondaryOptions. primaryOptions are prepended to the
   // sort options and secondaryOptions are appended.
   const { primaryOptions, secondaryOptions } = getSortOptionsFromListingFields(listingFields);
-  const filteredDefaults = defaultSortConfig.options.filter(option => !removeByKey[option.key]);
+  // hostedSortConfig can be undefined if listing search settings have not been updated in Console,
+  // in which case there's no need to filter out any options
+  const filteredDefaults =
+    hostedSortConfig == null
+      ? defaultSortConfig.options
+      : defaultSortConfig.options.filter(option => !removeByKey[option.key]);
   const options = [...primaryOptions, ...filteredDefaults, ...secondaryOptions];
 
   return {

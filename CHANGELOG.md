@@ -14,8 +14,112 @@ way to update this template, but currently, we follow a pattern:
 
 ## Upcoming version 2026-XX-XX
 
+- [fix] configHelpers.js: Only validate numberConfig for schemaType long
+  [#852](https://github.com/sharetribe/web-template/pull/852)
+
+## [v11.1.0] 2026-05-18
+
+- [fix] SearchPage.duck.js: fix integer filter preparation (configs were mixed)
+  [#848](https://github.com/sharetribe/web-template/pull/848)
+- [fix] ContactDetailsPage.duck.js: fix an 'undefined' bug with saveEmailAndPhoneNumberThunk.
+  [#846](https://github.com/sharetribe/web-template/pull/846)
+- [add] Adds codebase support for saving referral ID to user private data on sign-up.
+  [#826](https://github.com/sharetribe/web-template/pull/826)
+
+  [v11.1.0]: https://github.com/sharetribe/web-template/compare/v11.0.2...v11.1.0
+
+## [v11.0.2] 2026-04-29
+
+- [fix] User fields: fix a bug with numberConfig validation (min and max values were missing).
+  [#840](https://github.com/sharetribe/web-template/pull/840)
+- [fix] Fix a layout bug with InboxSortBy component.
+  [#839](https://github.com/sharetribe/web-template/pull/839)
+- [fix] Fix a bug with UserCard showMore button.
+  [#838](https://github.com/sharetribe/web-template/pull/838)
+- [fix] Fixes a bug where listing metadata fields were not shown in the sort dropdown if the default
+  sorting config is missing [#835](https://github.com/sharetribe/web-template/pull/835)
+- [fix] Fix an error in a negotiation email template
+  [#837](https://github.com/sharetribe/web-template/pull/837)
+- [change] Update README.md to mention the NODE_ENV environment variable.
+  [#836](https://github.com/sharetribe/web-template/pull/836)
+- [add] Add currently available translations for DE, ES, FR.
+  [#834](https://github.com/sharetribe/web-template/pull/834)
+
+  [v11.0.2]: https://github.com/sharetribe/web-template/compare/v11.0.1...v11.0.2
+
+## [v11.0.1] 2026-04-17
+
+- [fix] Fixes a bug where required short texts were not handled in EditListingWizard
+  [831](https://github.com/sharetribe/web-template/pull/831)
+- [change] Update some dependencies - inclusing webpack and lodash.
+  [828](https://github.com/sharetribe/web-template/pull/828)
+- [fix] SearchPage variants: getListingsById creates a new array on every call. This adds a memoized
+  selector factory and uses it instead. [#829](https://github.com/sharetribe/web-template/pull/829)
+
+  [v11.0.1]: https://github.com/sharetribe/web-template/compare/v11.0.0...v11.0.1
+
+## [v11.0.0] 2026-04-14
+
+This major release is centered on the template ejection from sharetribe-scripts (our fork of Create
+React App). In addition, we have refactored AuthenticationPage, SearchPage, ListingPage, and
+ManageListingCard.
+
+This also changes the Stripe Connect account requirements for Netherlands. Stripe can't support
+individual accounts for sellers in Netherlands. New accounts must be created with business type
+"company". (An individual account is mapped as a sole proprietorship in Stripe.)
+
+There's also a new field schema type: shortText. This allows short text inputs to be shown in the
+Details section of a listing and profile pages.
+
+- [change] ManageListingCard: refactor the component.
+  [#805](https://github.com/sharetribe/web-template/pull/805)
+- [change] ListingPage: refactor the page.
+
+  - Add custom component to handle access control redirections (ListingPageAccessWrapper)
+  - Move shared functions and derived data to SearchPage.shared.js file
+    - getDerivedRenderData
+  - Add Notifications sub component to handle the rendering of ActionBar(s)
+  - Remove deprecated Redux functions: connect, mapStateToProps and mapDispatchToProps
+
+  [#819](https://github.com/sharetribe/web-template/pull/819)
+
+- [change] SearchPage(s): refactor the page.
+
+  - Add custom component to handle access control redirections (SearchPageAccessWrapper)
+  - Move shared functions and derived data to SearchPage.shared.js file
+    - getDerivedRenderData
+    - onApplyFilters
+    - onSortBy
+    - onResetAll
+    - createFilterValueChangeHandler
+  - Remove deprecated Redux functions: connect, mapStateToProps and mapDispatchToProps
+
+  [#815](https://github.com/sharetribe/web-template/pull/815)
+
+- [change] AuthenticationPage: refactor the component tree.
+
+  - Move SocialLoginButtons into a separate file
+  - Remove middle-layer components: AuthenticationForms, AuthenticationOrConfirmInfoForm
+  - The Redux-container functions connect, mapStateToProps, and mapDispatchToProps are deprecated.
+    This PR explores the option to create somewhat minimum change to start using hooks instead.
+
+  [#811](https://github.com/sharetribe/web-template/pull/811)
+
+- [change] Eject Template from sharetribe-scripts aka our Create React App fork. This is a big
+  change for the build process and package.json.
+  [#792](https://github.com/sharetribe/web-template/pull/792)
+- [change] Update Stripe Connect account requirements for Netherlands.
+  [#824](https://github.com/sharetribe/web-template/pull/824)
+- [fix] email verification badge: it was using the old success color.
+  [#825](https://github.com/sharetribe/web-template/pull/825)
+- [add] Add support for a new user, listing, and transaction field schema type: shortText
+  [#812](https://github.com/sharetribe/web-template/pull/812)
+- [add] Add currently available translations for DE, ES, FR.
+  [#818](https://github.com/sharetribe/web-template/pull/818)
 - [fix] Fix return value in CheckoutPage pay-and-save-card flow
   [#816](https://github.com/sharetribe/web-template/pull/816)
+
+  [v11.0.0]: https://github.com/sharetribe/web-template/compare/v10.15.0...v11.0.0
 
 ## [v10.15.0] 2026-03-25
 

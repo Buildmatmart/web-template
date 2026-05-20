@@ -21,18 +21,27 @@ const getItemQuantityAndLineItems = (orderData, publicData, currency) => {
   const deliveryMethod = orderData && orderData.deliveryMethod;
   const isShipping = deliveryMethod === 'shipping';
   const isPickup = deliveryMethod === 'pickup';
-  const { shippingPriceInSubunitsOneItem, shippingPriceInSubunitsAdditionalItems } =
+  const { shippingPriceInSubunitsOneItem, shippingPriceInSubunitsAdditionalItems, noOfItems } =
     publicData || {};
 
-  // Calculate shipping fee if applicable
-  const shippingFee = isShipping
-    ? calculateShippingFee(
+  // Calculate shipping fee if applicable.
+  // If noOfItems is set, use batch pricing: fee = base fee × ceil(quantity / noOfItems).
+  // e.g. $100 per 1,000 items: ordering 5,500 items → ceil(5500/1000) = 6 → $600.
+  let shippingFee = null;
+  if (isShipping) {
+    const batchSize = noOfItems ? Number(noOfItems) : null;
+    if (batchSize && batchSize > 1 && shippingPriceInSubunitsOneItem != null && quantity) {
+      const feeMultiplier = Math.ceil(quantity / batchSize);
+      shippingFee = new Money(shippingPriceInSubunitsOneItem * feeMultiplier, currency);
+    } else {
+      shippingFee = calculateShippingFee(
         shippingPriceInSubunitsOneItem,
         shippingPriceInSubunitsAdditionalItems,
         currency,
         quantity
-      )
-    : null;
+      );
+    }
+  }
 
   // Add line-item for given delivery method.
   // Note: by default, pickup considered as free and, therefore, we don't add pickup fee line-item
@@ -142,7 +151,7 @@ exports.transactionLineItems = (listing, orderData, providerCommission, customer
   const { unitType, priceVariants, priceVariationsEnabled } = publicData;
 
   const isBookable = ['day', 'night', 'hour', 'fixed'].includes(unitType);
-  const isNegotiationUnitType = ['offer', 'request'].includes(unitType);
+  const isNegotiationUnitType = ['offer', 'request', 'item'].includes(unitType);
   const priceAttribute = listing.attributes.price;
   const currency = priceAttribute?.currency || orderData.currency;
 

@@ -2,6 +2,7 @@ import { createElement, Fragment } from 'react';
 // cjs module
 import { default as unified } from 'unified';
 import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
 import remark2rehype from 'remark-rehype';
 // If you need to support HTML tags, remember to sanitize the output
 // https://github.com/remarkjs/remark-rehype#example-supporting-html-in-markdown-properly
@@ -11,6 +12,7 @@ import rehypeReact from 'rehype-react';
 const processor = (components = {}) => {
   return unified()
     .use(remarkParse)
+    .use(remarkGfm)
     .use(remark2rehype)
     .use(rehypeSanitize)
     .use(rehypeReact, {

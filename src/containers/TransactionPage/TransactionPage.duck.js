@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
+import appSettings from '../../config/settings';
 import { isEmpty, pickBy } from '../../util/common';
 import { types as sdkTypes, createImageVariantConfig } from '../../util/sdkLoader';
 import {
@@ -22,6 +23,7 @@ import {
   getProcess,
   isBookingProcess,
   isNegotiationProcess,
+  PURCHASE_PROCESS_NAME,
 } from '../../transactions/transaction';
 
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
@@ -82,7 +84,7 @@ const refreshTransactionEntity = (sdk, txId, dispatch) => {
     })
     .catch(e => {
       // refresh failed, but we don't act upon it.
-      console.log('error', e);
+      console.log('error', e); // eslint-disable-line no-console
     });
 };
 
@@ -283,7 +285,10 @@ const fetchTransactionPayloadCreator = (
           fetchMonthlyTimeSlots(dispatch, listing);
         }
       } catch (error) {
-        console.log(`transaction process (${processName}) was not recognized`);
+        if (appSettings.dev) {
+          // eslint-disable-next-line no-console
+          console.log(`transaction process (${processName}) was not recognized`);
+        }
       }
 
       return response;
@@ -320,6 +325,7 @@ const makeTransitionPayloadCreator = (
   const transaction = getState()?.marketplaceData?.entities?.transaction?.[txId?.uuid];
   const processName = resolveLatestProcessName(transaction?.attributes?.processName);
   const process = getProcess(processName);
+  const isPurchase = processName === PURCHASE_PROCESS_NAME;
 
   // This calls the client app's server to make a privileged transition.
   const privilegedTransition = () =>
@@ -329,7 +335,9 @@ const makeTransitionPayloadCreator = (
       bodyParams: {
         id: txId,
         transition: transitionName,
-        params: {}, // NOTE: lineItems and metadata are included on the server-side.
+        params: {
+          ...(isPurchase ? { stockReservationQuantity: 1 } : {}),
+        }, // NOTE: lineItems and metadata are included on the server-side.
       },
       queryParams: {
         expand: true,

@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { types as sdkTypes, createImageVariantConfig } from '../../util/sdkLoader';
 import { storableError } from '../../util/errors';
 import { addMarketplaceEntities } from '../../ducks/marketplaceData.duck';
-import { transactionLineItems } from '../../util/api';
+import { initiatePrivileged, transactionLineItems } from '../../util/api';
 import * as log from '../../util/log';
 import { denormalisedResponseEntities } from '../../util/data';
 import {
@@ -273,6 +273,50 @@ export const sendInquiry = (listing, message) => (dispatch, getState, sdk) => {
   return dispatch(sendInquiryThunk({ listing, message })).unwrap();
 };
 
+//////////////////
+// Make an Offer //
+//////////////////
+const makeOfferPayloadCreator = (
+  { listing, offerAmount, currency },
+  { dispatch, rejectWithValue, extra: sdk }
+) => {
+  const processAlias = listing?.attributes?.publicData?.transactionProcessAlias;
+  if (!processAlias) {
+    const error = new Error('No transaction process attached to listing');
+    log.error(error, 'listing-process-missing', { listingId: listing?.id?.uuid });
+    return rejectWithValue(storableError(error));
+  }
+
+  const listingId = listing?.id;
+  const [processName] = processAlias.split('/');
+  const transitions = getProcess(processName)?.transitions;
+
+  const bodyParams = {
+    transition: transitions.MAKE_OFFER,
+    processAlias,
+    params: { listingId, protectedData: {}, stockReservationQuantity: 1 },
+  };
+
+  return initiatePrivileged({
+    isSpeculative: false,
+    bodyParams,
+    queryParams: { include: ['booking', 'provider'], expand: true },
+    orderData: { actor: 'customer', offerInSubunits: offerAmount * 100, currency },
+  })
+    .then(response => {
+      dispatch(setCurrentUserHasOrders());
+      return response.data.data.id;
+    })
+    .catch(e => rejectWithValue(storableError(e)));
+};
+
+export const makeOfferThunk = createAsyncThunk('ListingPage/makeOffer', makeOfferPayloadCreator);
+
+// Backward compatible wrapper for the thunk
+export const makeOffer = (listing, offerAmount, currency) => (dispatch, getState, sdk) => {
+  return dispatch(makeOfferThunk({ listing, offerAmount, currency })).unwrap();
+};
+
 // Helper function for loadData call.
 // Note: listing could be ownListing entity too
 const fetchMonthlyTimeSlots = (dispatch, listing) => {
@@ -396,6 +440,9 @@ const initialState = {
   sendInquiryInProgress: false,
   sendInquiryError: null,
   inquiryModalOpenForListingId: null,
+  makeOfferInProgress: false,
+  makeOfferError: null,
+  makeOfferTransactionId: null,
 };
 
 const listingPageSlice = createSlice({
@@ -414,6 +461,7 @@ const listingPageSlice = createSlice({
       })
       .addCase(showListingThunk.fulfilled, (state, action) => {
         // Data is handled by addMarketplaceEntities in the thunk
+        state.id = action.payload.data.data.id;
       })
       .addCase(showListingThunk.rejected, (state, action) => {
         state.showListingError = action.payload;
@@ -502,6 +550,19 @@ const listingPageSlice = createSlice({
       .addCase(sendInquiryThunk.rejected, (state, action) => {
         state.sendInquiryInProgress = false;
         state.sendInquiryError = action.payload;
+      })
+      .addCase(makeOfferThunk.pending, state => {
+        state.makeOfferInProgress = true;
+        state.makeOfferError = null;
+        state.makeOfferTransactionId = null;
+      })
+      .addCase(makeOfferThunk.fulfilled, (state, action) => {
+        state.makeOfferInProgress = false;
+        state.makeOfferTransactionId = action.payload;
+      })
+      .addCase(makeOfferThunk.rejected, (state, action) => {
+        state.makeOfferInProgress = false;
+        state.makeOfferError = action.payload;
       })
       .addCase(fetchTransactionLineItemsThunk.pending, state => {
         state.fetchLineItemsInProgress = true;

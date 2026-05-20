@@ -125,6 +125,8 @@ const getOrderParams = (
   const priceVariantNameMaybe = priceVariantName ? { priceVariantName } : {};
   const priceVariant = priceVariants?.find(pv => pv.name === priceVariantName);
   const priceVariantMaybe = priceVariant ? prefixPriceVariantProperties(priceVariant) : {};
+  const offer = pageData.orderData?.offer;
+  const offerMaybe = offer ? { offer } : {};
 
   const customerDefaultMessageMaybe = customerDefaultMessage ? { customerDefaultMessage } : {};
 
@@ -157,6 +159,7 @@ const getOrderParams = (
     ...priceVariantNameMaybe,
     ...protectedDataMaybe,
     ...optionalPaymentParams,
+    ...offerMaybe,
   };
   return orderParams;
 };
@@ -185,11 +188,16 @@ const fetchSpeculatedTransactionIfNeeded = (orderParams, pageData, fetchSpeculat
     const isOfferPendingInNegotiationProcess =
       resolvedProcessName === NEGOTIATION_PROCESS_NAME &&
       tx.attributes.state === `state/${process.states.OFFER_PENDING}`;
+    const isOfferPendingInPurchaseProcess =
+      resolvedProcessName === PURCHASE_PROCESS_NAME &&
+      tx?.attributes?.state === `state/${process.states.OFFER_ACCEPTED}`;
 
     const requestTransition = isInquiryInPaymentProcess
       ? process.transitions.REQUEST_PAYMENT_AFTER_INQUIRY
       : isOfferPendingInNegotiationProcess
       ? process.transitions.REQUEST_PAYMENT_TO_ACCEPT_OFFER
+      : isOfferPendingInPurchaseProcess
+      ? process.transitions.REQUEST_PAYMENT_AFTER_NEGOTIATION
       : process.transitions.REQUEST_PAYMENT;
     const isPrivileged = process.isPrivileged(requestTransition);
 
@@ -454,10 +462,27 @@ export const CheckoutPageWithPayment = props => {
   const existingTransaction = ensureTransaction(transaction);
   const speculatedTransaction = ensureTransaction(speculatedTransactionMaybe, {}, null);
 
+  const isBooking = processName === BOOKING_PROCESS_NAME;
+  const isPurchase = processName === PURCHASE_PROCESS_NAME;
+  const isNegotiation = processName === NEGOTIATION_PROCESS_NAME;
+
   // If existing transaction has line-items, it has gone through one of the request-payment transitions.
   // Otherwise, we try to rely on speculatedTransaction for order breakdown data.
+  // For purchase process with an accepted offer, the existing transaction is used but its line items
+  // are replaced with the speculated transaction's line items (which reflect the negotiated price).
+
   const tx =
-    existingTransaction?.attributes?.lineItems?.length > 0
+    isPurchase && existingTransaction?.id && speculatedTransaction?.attributes?.lineItems
+      ? {
+          ...existingTransaction,
+          attributes: {
+            ...existingTransaction.attributes,
+            lineItems: speculatedTransaction?.attributes?.lineItems,
+            payoutTotal: speculatedTransaction?.attributes?.payoutTotal,
+            payinTotal: speculatedTransaction?.attributes?.payinTotal,
+          },
+        }
+      : existingTransaction?.attributes?.lineItems?.length > 0
       ? existingTransaction
       : speculatedTransaction;
   const timeZone = listing?.attributes?.availabilityPlan?.timezone;
@@ -517,10 +542,6 @@ export const CheckoutPageWithPayment = props => {
     speculateTransactionError,
     listingLink
   );
-
-  const isBooking = processName === BOOKING_PROCESS_NAME;
-  const isPurchase = processName === PURCHASE_PROCESS_NAME;
-  const isNegotiation = processName === NEGOTIATION_PROCESS_NAME;
 
   const txTransitions = existingTransaction?.attributes?.transitions || [];
   const hasInquireTransition = txTransitions.find(tr => tr.transition === transitions.INQUIRE);

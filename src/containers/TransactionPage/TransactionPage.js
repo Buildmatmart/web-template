@@ -78,6 +78,9 @@ import {
 } from './TransactionPage.duck';
 import css from './TransactionPage.module.css';
 import { getCurrentUserTypeRoles, hasPermissionToViewData } from '../../util/userHelpers.js';
+import { types as sdkTypes } from '../../util/sdkLoader';
+
+const { Money } = sdkTypes;
 
 const MAX_MOBILE_SCREEN_WIDTH = 1023;
 
@@ -126,7 +129,40 @@ const onChangeRequest = (
     });
 };
 
-// Submit counter offer, make transition, and send message
+// Submit counter offer for purchase process.
+// Offer history is stored in protectedData.offers array (non-privileged transition).
+const onMakePurchaseCounterOffer = (
+  currentTransactionId,
+  transitionName,
+  onTransition,
+  transactionRole,
+  currency,
+  setMakeCounterOfferModalOpen,
+  setCounterOfferSubmitted
+) => values => {
+  const { counterOffer } = values;
+  // counterOffer.amount from FieldCurrencyInput is already in subunits (e.g. cents)
+
+  const params = {
+    orderData: {
+      actor: transactionRole,
+      offerInSubunits: counterOffer.amount, // TODO: get the actual offer in subunits
+      currency,
+    },
+  };
+
+  onTransition(currentTransactionId, transitionName, params)
+    .then(r => {
+      setMakeCounterOfferModalOpen(false);
+      return setCounterOfferSubmitted(true);
+    })
+    .catch(e => {
+      // Do nothing, error will be handled by the form
+    });
+};
+
+// Submit counter offer for negotiation process.
+// Uses privileged transition via orderData (offerInSubunits stored server-side).
 const onMakeCounterOffer = (
   currentTransactionId,
   transitionName,
@@ -306,6 +342,7 @@ export const TransactionPageComponent = props => {
     nextTransitions,
     callSetInitialValues,
     onInitializeCardPaymentData,
+    onFetchTransactionLineItems,
     ...restOfProps
   } = props;
 
@@ -327,7 +364,7 @@ export const TransactionPageComponent = props => {
   };
 
   const redirectToCheckoutPageWithInitialValues = (initialValues, currentListing) => {
-    // Customize checkout page state with current listing and selected bookingDates
+    // Customize the state of the CheckoutPage with the current transaction, listing and the selected orderData
     const { setInitialValues } = findRouteByRouteName('CheckoutPage', routeConfiguration);
     callSetInitialValues(setInitialValues, initialValues);
 
@@ -409,6 +446,10 @@ export const TransactionPageComponent = props => {
     const seatsMaybe = Number.isInteger(seats) ? { seats } : {};
     const deliveryMethodMaybe = deliveryMethod ? { deliveryMethod } : {};
 
+    const purchaseOffers = transaction?.attributes?.metadata?.offers || [];
+    const lastPurchaseOffer =
+      purchaseOffers.length > 0 ? purchaseOffers[purchaseOffers.length - 1] : null;
+
     const initialValues = {
       listing,
       // inquired transaction should be passed to CheckoutPage
@@ -420,6 +461,14 @@ export const TransactionPageComponent = props => {
         ...seatsMaybe,
         ...deliveryMethodMaybe,
         ...otherOrderData,
+        ...(lastPurchaseOffer
+          ? {
+              offer: new Money(
+                lastPurchaseOffer.offerInSubunits,
+                transaction.listing.attributes.price.currency
+              ),
+            }
+          : {}),
       },
       confirmPaymentError: null,
     };
@@ -525,14 +574,12 @@ export const TransactionPageComponent = props => {
     // If the user's user type does not have a provider role set, redirect
     // to 'orders' inbox tab. Otherwise, redirect to 'sales' tab.
     const tab = !isProviderUserTypeRole ? 'orders' : 'sales';
-    // eslint-disable-next-line no-console
     console.error('Tried to access a sale that was not owned by the current user');
     return <NamedRedirect name="InboxPage" params={{ tab }} />;
   } else if (isDataAvailable && isCustomerRole && !isOwnOrder) {
     // If the user's user type does not have a customer role set, redirect
     // to 'sales' inbox tab. Otherwise, redirect to 'orders' tab.
     const tab = !isCustomerUserTypeRole ? 'sales' : 'orders';
-    // eslint-disable-next-line no-console
     console.error('Tried to access an order that was not owned by the current user');
     return <NamedRedirect name="InboxPage" params={{ tab }} />;
   }
@@ -587,7 +634,6 @@ export const TransactionPageComponent = props => {
           onOpenReviewModal,
           onOpenRequestChangesModal,
           onOpenMakeCounterOfferModal,
-          onCheckoutRedirect: handleSubmitOrderRequest,
           onMakeOfferRedirect: onMakeOffer,
           intl,
         },
@@ -674,6 +720,12 @@ export const TransactionPageComponent = props => {
   });
 
   const actionButtonContainer = isMobile ? 'mobile' : 'desktop';
+
+  const isPurchaseProcessTx = processName === PURCHASE_PROCESS_NAME;
+  const purchaseOffers = transaction?.attributes?.metadata?.offers || [];
+  const lastPurchaseOffer =
+    purchaseOffers.length > 0 ? purchaseOffers[purchaseOffers.length - 1] : null;
+
   // TransactionPanel is presentational component
   // that currently handles showing everything inside layout's main view area.
   const panel = isDataAvailable ? (
@@ -789,11 +841,21 @@ export const TransactionPageComponent = props => {
           author={listing.author}
           onSubmit={isNegotiationProcess ? onMakeOffer : handleSubmitOrderRequest}
           onManageDisableScrolling={onManageDisableScrolling}
+          onFetchTransactionLineItems={(orderData, listingId, isOwnListing) => {
+            if (isPurchaseProcessTx && lastPurchaseOffer) {
+              orderData.orderData.offer = new Money(
+                lastPurchaseOffer.offerInSubunits,
+                config.currency
+              );
+            }
+            onFetchTransactionLineItems(orderData, listingId, isOwnListing);
+          }}
           {...restOfProps}
           validListingTypes={config.listing.listingTypes}
           marketplaceCurrency={config.currency}
           dayCountAvailableForBooking={config.stripe.dayCountAvailableForBooking}
           marketplaceName={config.marketplaceName}
+          hidePriceAvatar={true}
         />
       }
     />
@@ -814,7 +876,8 @@ export const TransactionPageComponent = props => {
   const showMakeCounterOfferModal =
     currencyConfig &&
     (process?.transitions?.CUSTOMER_MAKE_COUNTER_OFFER ||
-      process?.transitions?.PROVIDER_MAKE_COUNTER_OFFER);
+      process?.transitions?.PROVIDER_MAKE_COUNTER_OFFER ||
+      process?.transitions?.MAKE_OFFER);
 
   const pageHeading = isDataAvailable
     ? intl.formatMessage(
@@ -897,17 +960,31 @@ export const TransactionPageComponent = props => {
             onCloseModal={() => setMakeCounterOfferModalOpen(false)}
             focusElementId={`${actionButtonContainer}_${ACTION_BUTTON_3_ID}`}
             onManageDisableScrolling={onManageDisableScrolling}
-            onMakeCounterOffer={onMakeCounterOffer(
-              transaction?.id,
-              transactionRole === CUSTOMER
-                ? process?.transitions?.CUSTOMER_MAKE_COUNTER_OFFER
-                : process?.transitions?.PROVIDER_MAKE_COUNTER_OFFER,
-              onTransition,
-              transactionRole,
-              currency,
-              setMakeCounterOfferModalOpen,
-              setCounterOfferSubmitted
-            )}
+            onMakeCounterOffer={
+              isPurchaseProcessTx
+                ? onMakePurchaseCounterOffer(
+                    transaction?.id,
+                    transactionRole === CUSTOMER
+                      ? process?.transitions?.CUSTOMER_COUNTER_OFFER
+                      : process?.transitions?.PROVIDER_COUNTER_OFFER,
+                    onTransition,
+                    transactionRole,
+                    currency,
+                    setMakeCounterOfferModalOpen,
+                    setCounterOfferSubmitted
+                  )
+                : onMakeCounterOffer(
+                    transaction?.id,
+                    transactionRole === CUSTOMER
+                      ? process?.transitions?.CUSTOMER_MAKE_COUNTER_OFFER
+                      : process?.transitions?.PROVIDER_MAKE_COUNTER_OFFER,
+                    onTransition,
+                    transactionRole,
+                    currency,
+                    setMakeCounterOfferModalOpen,
+                    setCounterOfferSubmitted
+                  )
+            }
             currentOffer={currentOffer}
             counterOfferSubmitted={counterOfferSubmitted}
             counterOfferInProgress={counterOffers.includes(transitionInProgress)}
@@ -995,10 +1072,7 @@ const mapDispatchToProps = dispatch => {
 
 const TransactionPage = compose(
   withRouter,
-  connect(
-    mapStateToProps,
-    mapDispatchToProps
-  )
+  connect(mapStateToProps, mapDispatchToProps)
 )(TransactionPageComponent);
 
 export default TransactionPage;

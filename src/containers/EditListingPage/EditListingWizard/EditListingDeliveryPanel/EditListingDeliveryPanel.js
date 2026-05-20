@@ -41,6 +41,7 @@ const getInitialValues = props => {
     pickupEnabled,
     shippingPriceInSubunitsOneItem,
     shippingPriceInSubunitsAdditionalItems,
+    deliveryRadiusKm,
   } = publicData;
   const deliveryOptions = [];
 
@@ -73,6 +74,7 @@ const getInitialValues = props => {
     deliveryOptions,
     shippingPriceInSubunitsOneItem: shippingOneItemAsMoney,
     shippingPriceInSubunitsAdditionalItems: shippingAdditionalItemsAsMoney,
+    deliveryRadiusKm,
   };
 };
 
@@ -151,6 +153,7 @@ const EditListingDeliveryPanel = props => {
       </H3>
       {priceCurrencyValid ? (
         <EditListingDeliveryForm
+          isStockMoreThan1={listing?.currentStock?.attributes?.quantity > 1}
           className={css.form}
           initialValues={state.initialValues}
           onSubmit={values => {
@@ -160,6 +163,8 @@ const EditListingDeliveryPanel = props => {
               shippingPriceInSubunitsOneItem,
               shippingPriceInSubunitsAdditionalItems,
               deliveryOptions,
+              deliveryRadiusKm,
+              noOfItems,
             } = values;
 
             const shippingEnabled = deliveryOptions.includes('shipping');
@@ -167,8 +172,7 @@ const EditListingDeliveryPanel = props => {
             const address = location?.selectedPlace?.address || null;
             const origin = location?.selectedPlace?.origin || null;
 
-            const pickupDataMaybe =
-              pickupEnabled && address ? { location: { address, building } } : {};
+            const pickupDataMaybe = address ? { location: { address, building } } : {};
 
             const shippingDataMaybe =
               shippingEnabled && shippingPriceInSubunitsOneItem != null
@@ -178,6 +182,7 @@ const EditListingDeliveryPanel = props => {
                     shippingPriceInSubunitsOneItem: shippingPriceInSubunitsOneItem.amount,
                     shippingPriceInSubunitsAdditionalItems:
                       shippingPriceInSubunitsAdditionalItems?.amount,
+                    noOfItems,
                   }
                 : {};
 
@@ -189,6 +194,7 @@ const EditListingDeliveryPanel = props => {
                 ...pickupDataMaybe,
                 shippingEnabled,
                 ...shippingDataMaybe,
+                deliveryRadiusKm,
               },
             };
 
@@ -202,6 +208,8 @@ const EditListingDeliveryPanel = props => {
                 shippingPriceInSubunitsOneItem,
                 shippingPriceInSubunitsAdditionalItems,
                 deliveryOptions,
+                deliveryRadiusKm,
+                noOfItems,
               },
             });
             onSubmit(updateValues);

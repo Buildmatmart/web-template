@@ -3,6 +3,7 @@ import { updatedEntities, denormalisedEntities } from '../../util/data';
 import { storableError } from '../../util/errors';
 import { createImageVariantConfig } from '../../util/sdkLoader';
 import { parse } from '../../util/urlHelpers';
+import { getReferralParams } from '../../util/webStorageHelpers';
 
 import { fetchCurrentUser } from '../../ducks/user.duck';
 
@@ -180,6 +181,10 @@ const manageListingsPageSlice = createSlice({
       const apiResponse = action.payload.data;
       state.ownEntities = updatedEntities({ ...state.ownEntities }, apiResponse);
     },
+    updateOwnListing: (state, action) => {
+      const updatedState = updateListingAttributes(state, action.payload);
+      state.ownEntities = updatedState.ownEntities;
+    },
   },
   extraReducers: builder => {
     // Query own listings
@@ -196,7 +201,6 @@ const manageListingsPageSlice = createSlice({
         state.queryInProgress = false;
       })
       .addCase(queryOwnListingsThunk.rejected, (state, action) => {
-        // eslint-disable-next-line no-console
         console.error(action.payload || action.error);
         state.queryInProgress = false;
         state.queryListingsError = action.payload;
@@ -215,7 +219,6 @@ const manageListingsPageSlice = createSlice({
         state.openingListing = null;
       })
       .addCase(openListingThunk.rejected, (state, action) => {
-        // eslint-disable-next-line no-console
         console.error(action.payload || action.error);
         state.openingListingError = {
           listingId: state.openingListing,
@@ -237,7 +240,6 @@ const manageListingsPageSlice = createSlice({
         state.closingListing = null;
       })
       .addCase(closeListingThunk.rejected, (state, action) => {
-        // eslint-disable-next-line no-console
         console.error(action.payload || action.error);
         state.closingListingError = {
           listingId: state.closingListing,
@@ -258,7 +260,6 @@ const manageListingsPageSlice = createSlice({
         state.discardingDraft = null;
       })
       .addCase(discardDraftThunk.rejected, (state, action) => {
-        // eslint-disable-next-line no-console
         console.error(action.payload || action.error);
         state.discardingDraftError = {
           listingId: state.discardingDraft,
@@ -269,7 +270,11 @@ const manageListingsPageSlice = createSlice({
   },
 });
 
-export const { clearOpenListingError, addOwnEntities } = manageListingsPageSlice.actions;
+export const {
+  clearOpenListingError,
+  addOwnEntities,
+  updateOwnListing,
+} = manageListingsPageSlice.actions;
 export default manageListingsPageSlice.reducer;
 
 // ================ Load data ================ //
@@ -278,6 +283,17 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
   const queryParams = parse(search);
   const page = queryParams.page || 1;
   dispatch(clearOpenListingError());
+
+  // Filter out potential referral data parameters so that they are not included in the API query
+  const { userTypes = [] } = config.user;
+  const validReferralSources = getReferralParams(userTypes);
+  const apiParamsRaw = Object.fromEntries(
+    Object.entries(queryParams).filter(entry => {
+      const [key, value] = entry;
+
+      return !validReferralSources.includes(key);
+    })
+  );
 
   const {
     aspectWidth = 1,
@@ -290,7 +306,7 @@ export const loadData = (params, search, config) => (dispatch, getState, sdk) =>
     dispatch(fetchCurrentUser()),
     dispatch(
       queryOwnListings({
-        ...queryParams,
+        ...apiParamsRaw,
         page,
         perPage: RESULT_PAGE_SIZE,
         include: ['images', 'currentStock'],

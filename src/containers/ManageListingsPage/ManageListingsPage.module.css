@@ -1,8 +1,5 @@
 @import '../../styles/customMediaQueries.css';
 
-.root {
-}
-
 .tabs {
   display: none;
 
@@ -77,6 +74,131 @@
   }
 }
 
+.quotaInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0 24px 24px 24px;
+  padding: 24px;
+  background-color: var(--colorGrey100);
+  border: 1px solid var(--colorGrey300);
+  border-radius: 4px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  @media (--viewportLarge) {
+    margin: 0 36px 24px 36px;
+    padding: 32px;
+  }
+}
+
+.quotaDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quotaActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    align-items: flex-end;
+    width: auto;
+  }
+}
+
+.upgradeRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px;
+    column-gap: 16px;
+    align-items: center;
+  }
+}
+
+.actionRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  @media (--viewportMedium) {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) 160px;
+    column-gap: 16px;
+    align-items: center;
+  }
+}
+
+.actionLabel {
+  margin: 0;
+  font-size: 13px;
+  color: var(--colorGrey700);
+  text-align: left;
+
+  @media (--viewportMedium) {
+    text-align: right;
+    max-width: 360px;
+    flex-shrink: 0;
+  }
+}
+
+.quotaItem {
+  margin: 0;
+  font-size: 14px;
+  color: var(--colorGrey600);
+
+  & strong {
+    color: var(--colorGrey700);
+  }
+}
+
+.quotaActionButton {
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+  text-align: center;
+}
+
+.headingRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  @media (--viewportMedium) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+}
+
+.upgradeMessage {
+  margin: 0;
+  font-size: 13px;
+  color: var(--colorGrey600);
+  text-align: left;
+
+  @media (--viewportMedium) {
+    text-align: right;
+    max-width: 360px;
+    width: 100%;
+  }
+}
+
 .createListingParagraph,
 .headingNoListings {
   margin: 0 0 12px 0;
@@ -91,6 +213,8 @@
 }
 
 .listingCards {
+  list-style: none;
+  margin: 0;
   padding: 0 24px;
 
   display: grid;
