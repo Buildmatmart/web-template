@@ -152,6 +152,7 @@ const renderForm = formRenderProps => {
     onMakeOffer,
     deliveryRadiusKm,
     sellerGeolocation,
+    allow_offers,
   } = formRenderProps;
 
   // Initialize ref synchronously on first render so handleOnChange never sees a null prev
@@ -419,7 +420,7 @@ const renderForm = formRenderProps => {
           <FormattedMessage id="ProductOrderForm.finePrintNoStock" values={{ contactSellerLink }} />
         ) : null}
       </p>
-      {!isOwnListing && hasStock && onMakeOffer ? (
+      {!isOwnListing && hasStock && onMakeOffer && allow_offers === 'yes' ? (
         <div className={css.makeOfferButton}>
           <PrimaryButton type="button" onClick={onMakeOffer}>
             <FormattedMessage id="ProductOrderForm.makeOfferButton" />

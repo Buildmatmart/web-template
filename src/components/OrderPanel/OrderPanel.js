@@ -361,7 +361,8 @@ const OrderPanel = props => {
   const supportedProcessesInfo = getSupportedProcessesInfo();
   const isKnownProcess = supportedProcessesInfo.map(info => info.name).includes(processName);
 
-  const { pickupEnabled, shippingEnabled, deliveryRadiusKm } = listing?.attributes?.publicData || {};
+  const { pickupEnabled, shippingEnabled, deliveryRadiusKm, allow_offers = 'yes' } =
+    listing?.attributes?.publicData || {};
   const sellerGeolocation = listing?.attributes?.geolocation;
 
   const listingTypeConfig = validListingTypes.find(conf => conf.listingType === listingType);
@@ -539,6 +540,7 @@ const OrderPanel = props => {
             onContactUser={onContactUser}
             deliveryRadiusKm={deliveryRadiusKm}
             sellerGeolocation={sellerGeolocation}
+            allow_offers={allow_offers}
             {...sharedProps}
           />
         ) : showInquiryForm ? (
