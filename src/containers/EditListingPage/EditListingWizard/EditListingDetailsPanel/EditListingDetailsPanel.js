@@ -383,7 +383,11 @@ const EditListingDetailsPanel = props => {
       {canShowEditListingDetailsForm ? (
         <EditListingDetailsForm
           className={css.form}
-          initialValues={initialValues}
+          initialValues={
+            initialValues.pub_allow_offers
+              ? initialValues
+              : { ...initialValues, pub_allow_offers: 'yes' }
+          }
           saveActionMsg={submitButtonText}
           onSubmit={values => {
             const {

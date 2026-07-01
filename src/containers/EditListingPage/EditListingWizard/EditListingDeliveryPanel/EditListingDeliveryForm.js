@@ -166,7 +166,7 @@ export const EditListingDeliveryForm = props => (
             // See example: https://codesandbox.io/s/changing-field-level-validators-zc8ei
             key={pickupEnabled ? 'locationValidation' : 'noLocationValidation'}
             typeLimit={['locality', 'neighborhood']}
-            bbox={[149.5823, -35.2188, 152.8363, -32.5188]}
+            bbox={[149.0463, -35.6776, 153.3723, -32.0600]}
           />
 
           <FieldTextInput
