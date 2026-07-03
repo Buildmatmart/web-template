@@ -614,7 +614,7 @@ const OrderPanel = props => {
                 <FormattedMessage id="OrderPanel.ctaButtonMessageInquiry" />
               )}
             </PrimaryButton>
-            {isPurchase && !isOutOfStock && onMakeOffer ? (
+            {isPurchase && !isOutOfStock && onMakeOffer && allow_offers === 'yes' ? (
               <PrimaryButton type="button" onClick={onMakeOffer}>
                 <FormattedMessage id="OrderPanel.makeOfferButton" />
               </PrimaryButton>
